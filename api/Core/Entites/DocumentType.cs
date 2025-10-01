@@ -2,6 +2,6 @@
 public class DocumentType
 {
     public int DocumentTypeID { get; set; }
-    public string TypeName { get; set; } = string.Empty;
+    public enDocument TypeName { get; set; }
     public ICollection<File> Files { get; set; } = new List<File>();
 }

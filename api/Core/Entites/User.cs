@@ -5,7 +5,7 @@ public class User
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty; // e.g., "Admin", "User"
+    public enRole Role { get; set; } = enRole.User;
     public string SupervisorOrStudent { get; set; } = string.Empty;
     public ICollection<File> UploadedFiles { get; set; } = new List<File>();
 }

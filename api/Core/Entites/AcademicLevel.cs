@@ -2,6 +2,6 @@
 public class AcademicLevel
 {
     public int LevelID { get; set; }
-    public string LevelName { get; set; } = string.Empty;
+    public enLevel LevelName { get; set; }
     public ICollection<Course> Courses { get; set; } = new List<Course>();
 }
