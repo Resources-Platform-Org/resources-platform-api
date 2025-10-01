@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core.Entites;
+﻿namespace Core.Entites;
 public class Semester
 {
-    public Guid SemesterID {  get; set; } = Guid.NewGuid();
-
+    public int SemesterID { get; set; }
     public string SemesterName { get; set; } = string.Empty;
-
-    public ICollection<Course> courses { get;set; } = new List<Course>();
+    public ICollection<Course> Courses { get; set; } = new List<Course>();
 }

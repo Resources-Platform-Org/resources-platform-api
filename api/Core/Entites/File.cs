@@ -1,30 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core.Entites;
+﻿namespace Core.Entites;
 public class File
 {
-    public Guid FileID { get; set; } = Guid.NewGuid();
-
+    public int FileID { get; set; }
     public string FileName { get; set; } = string.Empty;
-
     public string FileType { get; set; } = string.Empty;
-
     public DateOnly UploadDate { get; set; }
-
-    public Guid CourseID { get; set; }
+    public int UploaderID { get; set; }
+    public User Uploader { get; set; } = default!;
+    public int CourseID { get; set; }
     public Course Course { get; set; } = default!;
-
-    public Guid ProfessorID { get; set; }
+    public int ProfessorID { get; set; }
     public Professor Professor { get; set; } = default!;
-
-    public Guid DocumentTypeID { get; set; }
+    public int DocumentTypeID { get; set; }
     public DocumentType DocumentType { get; set; } = default!;
-
-    public Guid UploaderID { get; set; }
-    public User User { get; set; } = default!;
-
 }
