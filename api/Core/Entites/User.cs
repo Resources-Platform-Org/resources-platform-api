@@ -6,5 +6,6 @@ public class User
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public enRole Role { get; set; } = enRole.User ;
+    // Navigation Properties
     public ICollection<File> UploadedFiles { get; set; } = new List<File>();
 }

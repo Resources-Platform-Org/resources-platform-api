@@ -12,7 +12,6 @@ namespace Infrastructure.Data.Configurations
             builder.Property(x => x.UniversityName)
                 .HasMaxLength(100)
                 .IsRequired();
-
         }
     }
 }
