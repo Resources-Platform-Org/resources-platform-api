@@ -1,14 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <Compile Remove="Data\Configurations\MajorConfiguration.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Data\Configurations\MajorConfiguration.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
