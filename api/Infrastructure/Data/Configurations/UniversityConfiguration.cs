@@ -13,8 +13,6 @@ namespace Infrastructure.Data.Configurations
                 .HasMaxLength(100)
                 .IsRequired();
 
-            // Relationship :-
-            
         }
     }
 }
