@@ -1,17 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace Core.Entites;
 
-namespace Core.Entites;
 public class CourseProfessor
 {
-    public Guid CourseID { get; set; }
-    public Course Course { get; set; } = default!;
-   
-    public Guid ProfessorID { get; set; }
+    // Foreign Keys [Composite Key]
+    // middle table to connect professors and courses M <=> M
+    public int CourseID { get; set; }
+    public int ProfessorID { get; set; }
+    // Navigation Properties
     public Professor Professor { get; set; } = default!;
-
-
+    public Course Course { get; set; } = default!;
 }

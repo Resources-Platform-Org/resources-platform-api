@@ -1,17 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core.Entites;
+﻿namespace Core.Entites;
 public class Professor
 {
-    public Guid ProfessorID { get; set; } = Guid.NewGuid();
-
+    public int ProfessorID { get; set; }
     public string ProfessorName { get; set; } = string.Empty;
-
+    // Navigation Properties
     public ICollection<File> Files { get; set; } = new List<File>();
-
     public ICollection<CourseProfessor> CourseProfessors { get; set; } = new List<CourseProfessor>();
 }
