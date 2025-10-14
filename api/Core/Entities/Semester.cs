@@ -1,4 +1,4 @@
-﻿namespace Core.Entites;
+﻿namespace Core.Entities;
 public class Semester
 {
     public int SemesterID { get; set; }

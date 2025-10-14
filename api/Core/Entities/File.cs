@@ -1,4 +1,4 @@
-﻿namespace Core.Entites;
+﻿namespace Core.Entities;
 public class File
 {
     public int FileID { get; set; }

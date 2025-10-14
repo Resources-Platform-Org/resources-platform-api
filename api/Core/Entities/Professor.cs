@@ -1,4 +1,4 @@
-﻿namespace Core.Entites;
+﻿namespace Core.Entities;
 public class Professor
 {
     public int ProfessorID { get; set; }

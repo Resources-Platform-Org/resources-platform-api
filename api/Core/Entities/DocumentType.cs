@@ -1,4 +1,4 @@
-﻿namespace Core.Entites;
+﻿namespace Core.Entities;
 public class DocumentType
 {
     public int DocumentTypeID { get; set; }
