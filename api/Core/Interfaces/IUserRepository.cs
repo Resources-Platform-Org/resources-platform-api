@@ -1,6 +1,6 @@
 using Core.Entities;
 
-interface IUserRepository
+public interface IUserRepository
 {
     Task<User?> GetUserByEmailAsync(string email);
     Task GetUserRoleAsync(User user);
