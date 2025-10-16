@@ -1,6 +1,6 @@
 using Core.Entities;
 
-public interface ProfessorRepository
+public interface IProfessorRepository
 {
     Task<Professor> GetCoursesAsync(int professorId , int? semesterId);
 }
