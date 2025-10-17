@@ -1,4 +1,6 @@
-﻿namespace Core.Entities;
+﻿using Core.Enums;
+
+namespace Core.Entities;
 public class File
 {
     public int FileID { get; set; }
