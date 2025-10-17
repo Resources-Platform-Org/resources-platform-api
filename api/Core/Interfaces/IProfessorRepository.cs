@@ -1,6 +1,9 @@
 using Core.Entities;
 
-public interface IProfessorRepository
+namespace Core.Interfaces
 {
-    Task<Professor> GetCoursesAsync(int professorId , int? semesterId);
+    public interface IProfessorRepository : IGenericRepository<Professor>
+    {
+        Task<IReadOnlyList<Course>> GetCoursesAsync(int professorId, int? semesterId = null, CancellationToken cancellationToken = default);
+    }
 }

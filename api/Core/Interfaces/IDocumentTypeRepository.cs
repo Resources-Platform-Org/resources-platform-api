@@ -1,6 +1,10 @@
 using Core.Entities;
+using Core.Enums;
 
-public interface IDocumentTypeRepository
+namespace Core.Interfaces
 {
-    Task<Dictionary<enFileType,int>> CountFileByTypeForCourseAsync(int courseId);
+    public interface IDocumentTypeRepository : IGenericRepository<DocumentType>
+    {
+        Task<Dictionary<enFileType,int>> CountFileByTypeForCourseAsync(int courseId);
+    }
 }
