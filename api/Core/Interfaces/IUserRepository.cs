@@ -1,8 +1,8 @@
 using Core.Entities;
 
-public interface IUserRepository
+public interface IUserRepository : IGenericRepository<User>
 {
     Task<User?> GetUserByEmailAsync(string email);
-    Task GetUserRoleAsync(User user);
-    Task IsUsernameOrEmailTakenAsync(string username, string email);
+    Task<string?> GetUserRoleAsync(User user);
+    Task<bool> IsUsernameOrEmailTakenAsync(string username, string email);
 }
