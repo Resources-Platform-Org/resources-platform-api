@@ -1,4 +1,4 @@
-﻿using Core.Entites;
+﻿using Core.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Data;
@@ -21,7 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Semester> Semesters { get; set; }
     public DbSet<Professor> Professors { get; set; }
     public DbSet<CourseProfessor> CourseProfessors { get; set; }
-    public DbSet<Core.Entites.File> Files { get; set; }
+    public DbSet<Core.Entities.File> Files { get; set; }
     public DbSet<DocumentType> DocumentTypes { get; set; }
     public DbSet<User> Users { get; set; }
 
