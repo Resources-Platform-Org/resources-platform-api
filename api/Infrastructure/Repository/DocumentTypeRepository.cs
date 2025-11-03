@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repository
 {
-    class DocumentTypeRepository : GenericRepository<DocumentType>, IDocumentTypeRepository
+    public class DocumentTypeRepository : GenericRepository<DocumentType>, IDocumentTypeRepository
     {
         private readonly ApplicationDbContext _context;
         public DocumentTypeRepository(ApplicationDbContext context) : base(context)
@@ -21,6 +21,7 @@ namespace Infrastructure.Repository
         public Task<Dictionary<enFileType, int>> CountFileByTypeForCourseAsync(int courseId)
         {
             var result = _context.Files
+                .AsNoTracking()
                 .Where(dt => dt.CourseID == courseId)
                 .GroupBy(dt => dt.FileType)
                 .Select(g => new { FileType = g.Key, Count = g.Count() })
