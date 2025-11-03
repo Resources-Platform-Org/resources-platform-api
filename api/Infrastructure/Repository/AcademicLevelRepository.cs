@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repository
 {
-    class AcademicLevelRepository : GenericRepository<AcademicLevel>, IAcademicLevelRepository
+    public class AcademicLevelRepository : GenericRepository<AcademicLevel>, IAcademicLevelRepository
     {
         private readonly ApplicationDbContext _context;
         public AcademicLevelRepository(ApplicationDbContext context) : base(context)
