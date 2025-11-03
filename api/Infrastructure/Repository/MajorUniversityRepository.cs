@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Repository
 {
-    class MajorUniversityRepository : GenericRepository<Major>, IMajorUniversityRepository
+    public class MajorUniversityRepository : GenericRepository<Major>, IMajorUniversityRepository
     {
         private readonly ApplicationDbContext _context;
         public MajorUniversityRepository(ApplicationDbContext context) : base(context)
@@ -15,8 +15,9 @@ namespace Infrastructure.Repository
         }
         public async Task<IEnumerable<Course>> GetCoursesAsync(int majorId, int? semesterId, int? levelId)
         {
-            var query =  _context.Courses.
-                Where(c => c.MajorID == majorId);
+            var query = _context.Courses
+                .AsNoTracking()
+                .Where(c => c.MajorID == majorId);
 
             if (semesterId.HasValue)
                 query = query.Where(c => c.SemesterID == semesterId.Value);
