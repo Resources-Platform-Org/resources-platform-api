@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repository
 {
-    class UniversityRepository : GenericRepository<University>, IUniversityRepository
+    public class UniversityRepository : GenericRepository<University>, IUniversityRepository
     {
         private readonly ApplicationDbContext _context;
         public UniversityRepository(ApplicationDbContext context) : base(context)
@@ -14,6 +14,7 @@ namespace Infrastructure.Repository
         public async Task<IEnumerable<Major>> GetMajorsAsync(int universityId)
         {
             return await _context.Majors
+                .AsNoTracking()
                 .Where(x => x.UniversityID == universityId)
                 .ToListAsync();
         }
