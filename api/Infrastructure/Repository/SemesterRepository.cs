@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repository
 {
-    class SemesterRepository : GenericRepository<Semester>, ISemesterRepository
+    public class SemesterRepository : GenericRepository<Semester>, ISemesterRepository
     {
         private readonly ApplicationDbContext _context;
         public SemesterRepository(ApplicationDbContext context) : base(context)
@@ -15,6 +15,7 @@ namespace Infrastructure.Repository
         public async Task<IEnumerable<Course>> GetCoursesBySemesterAsync(int semesterId)
         {
             return await _context.Courses
+                .AsNoTracking()
                 .Where(c => c.SemesterID == semesterId)
                 .ToListAsync();
         }
@@ -23,8 +24,7 @@ namespace Infrastructure.Repository
         {
             // Return distinct professors who are assigned to courses in the requested semester.
             return await _context.CourseProfessors
-                .Include(cp => cp.Course)
-                .Include(cp => cp.Professor)
+                .AsNoTracking()
                 .Where(cp => cp.Course.SemesterID == semesterId)
                 .Select(cp => cp.Professor)
                 .Distinct()
