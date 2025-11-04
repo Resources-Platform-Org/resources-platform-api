@@ -1,13 +1,16 @@
-public enum enFileType
+namespace Core.Enums
 {
-    PDF,
-    DOCX,
-    PPTX,
-    XLSX,
-    TXT,
-    ZIP,
-    RAR,
-    JPG,
-    PNG,
-    GIF
+    public enum enFileType
+    {
+        PDF,
+        DOCX,
+        PPTX,
+        XLSX,
+        TXT,
+        ZIP,
+        RAR,
+        JPG,
+        PNG,
+        GIF
+    }
 }

@@ -1,4 +1,4 @@
-﻿namespace Core.Entites;
+﻿namespace Core.Entities;
 public class AcademicLevel
 {
     public int LevelID { get; set; }
