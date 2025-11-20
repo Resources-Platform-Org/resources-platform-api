@@ -24,7 +24,7 @@ public class UserRepository : GenericRepository<User>, IUserRepository
         var role = await _context.Users
             .AsNoTracking()
             .Where(u => u.UserID == user.UserID)
-            .Select(r => (enRole?)r.Role) 
+            .Select(r => (enRoles?)r.Role) 
             .FirstOrDefaultAsync();
         return role?.ToString() ;
     }
