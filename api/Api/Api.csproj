@@ -7,7 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Existing OpenAPI generation package -->
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
+    <!-- Added Swagger UI package -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
   </ItemGroup>
 
   <ItemGroup>
