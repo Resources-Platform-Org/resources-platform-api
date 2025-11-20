@@ -1,4 +1,4 @@
-public enum enRole
+public enum enRoles
 {
     Admin, 
     User
