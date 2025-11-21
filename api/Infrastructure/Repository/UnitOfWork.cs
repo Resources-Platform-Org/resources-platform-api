@@ -11,7 +11,8 @@ public class UnitOfWork : IUnitOfWork
         IProfessorRepository professors,
         IDocumentTypeRepository documentTypes,
         IMajorUniversityRepository majorUniversities,
-        ISemesterRepository semesters)
+        ISemesterRepository semesters,
+        IAcademicLevelRepository academicLevels)
     {
         _context = context;
         Users = users;
@@ -22,6 +23,7 @@ public class UnitOfWork : IUnitOfWork
         DocumentTypes = documentTypes;
         MajorUniversities = majorUniversities;
         Semesters = semesters;
+        AcademicLevels = academicLevels;
     }
 
     public IUserRepository Users { get; }
@@ -39,6 +41,8 @@ public class UnitOfWork : IUnitOfWork
     public IMajorUniversityRepository MajorUniversities { get; }
 
     public ISemesterRepository Semesters { get; }
+
+    public IAcademicLevelRepository AcademicLevels { get; }
 
     public async Task<int> SaveChangesAsync()
     {
