@@ -1,172 +1,216 @@
-﻿using Api.Dto;
+﻿using Api.Dtos.Files;
 using Core.Entities;
 using Core.Interfaces;
+using Core.Models.Files;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Core.Enums;
 
 namespace Api.Controllers
 {
-    [ApiController]
     [Route("api/[controller]")]
+    [ApiController]
     public class FilesController : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<FilesController> _logger;
-        private readonly IWebHostEnvironment _env;
-        private const int MaxPageSize = 100;
+        private readonly IWebHostEnvironment _environment;
 
-        public FilesController(IUnitOfWork unitOfWork, ILogger<FilesController> logger, IWebHostEnvironment env)
+        public FilesController(IUnitOfWork unitOfWork, IWebHostEnvironment environment)
         {
             _unitOfWork = unitOfWork;
-            _logger = logger;
-            _env = env;
+            _environment = environment;
         }
 
-        /// <summary>
-        /// List files with optional filters, search and pagination.
-        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetFiles([FromQuery] FileFilterRequest request)
+        public async Task<IActionResult> GetAll([FromQuery] FileFilterDto filter)
         {
-            if (request.Page <= 0) return BadRequest(new { message = "page must be > 0" });
-            if (request.PageSize <= 0 || request.PageSize > MaxPageSize) return BadRequest(new { message = $"pageSize must be between 1 and {MaxPageSize}" });
+            var (items, totalCount) = await _unitOfWork.Files.FilterAsync(
+                filter.UniversityId,
+                filter.MajorId,
+                filter.CourseId,
+                filter.DocumentTypeId,
+                filter.ProfessorId,
+                filter.Search,
+                filter.Sort,
+                filter.Page,
+                filter.PageSize
+            );
 
-            var (items, total) = await _unitOfWork.Files.FilterAsync(
-                request.UniversityId,
-                request.MajorId,
-                request.CourseId,
-                request.AcademicLevelId,
-                request.SemesterId,
-                request.DocumentTypeId,
-                request.ProfessorId,
-                request.Search,
-                request.Sort,
-                request.Page,
-                request.PageSize);
-
-            var dtoItems = items.Select(f => MapToDto(f)).ToList();
-            var result = new PagedResult<FileDto>
+            var result = items.Select(f => new FileResponseDto
             {
-                TotalCount = total,
-                Page = request.Page,
-                PageSize = request.PageSize,
-                Items = dtoItems
+                FileID = f.FileID,
+                FileName = f.FileName,
+                FileType = f.FileType.ToString(),
+                UploadDate = f.UploadDate,
+                UploaderName = f.Uploader?.Username ?? "Unknown",
+                CourseName = f.Course?.CourseName ?? "Unknown",
+                ProfessorName = f.Professor?.ProfessorName ?? "Unknown",
+                DocumentTypeName = f.DocumentType?.TypeName.ToString() ?? "Unknown",
+                CourseID = f.CourseID,
+                ProfessorID = f.ProfessorID,
+                DocumentTypeID = f.DocumentTypeID,
+                UploaderID = f.UploaderID
+            });
+
+            return Ok(new { TotalCount = totalCount, Items = result });
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var file = await _unitOfWork.Files.GetAsync(f => f.FileID == id, "Uploader", "Course", "Professor", "DocumentType");
+            if (file == null) return NotFound();
+
+            var response = new FileResponseDto
+            {
+                FileID = file.FileID,
+                FileName = file.FileName,
+                FileType = file.FileType.ToString(),
+                UploadDate = file.UploadDate,
+                CourseID = file.CourseID,
+                ProfessorID = file.ProfessorID,
+                DocumentTypeID = file.DocumentTypeID,
+                UploaderID = file.UploaderID,
+                UploaderName = file.Uploader?.Username ?? "Unknown",
+                CourseName = file.Course?.CourseName ?? "Unknown",
+                ProfessorName = file.Professor?.ProfessorName ?? "Unknown",
+                DocumentTypeName = file.DocumentType?.TypeName.ToString() ?? "Unknown"
             };
+            return Ok(response);
+        }
+
+        [HttpGet("{id}/download")]
+        public async Task<IActionResult> Download(int id)
+        {
+            var file = await _unitOfWork.Files.FindAsync(id);
+            if (file == null) return NotFound();
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads");
+            var filePath = Path.Combine(uploadsFolder, file.FileName);
+
+            if (!System.IO.File.Exists(filePath))
+                return NotFound("File not found on server.");
+
+            var memory = new MemoryStream();
+            using (var stream = new FileStream(filePath, FileMode.Open))
+            {
+                await stream.CopyToAsync(memory);
+            }
+            memory.Position = 0;
+
+            return File(memory, "application/octet-stream", file.FileName);
+        }
+
+        [HttpGet("recent")]
+        public async Task<IActionResult> GetRecent([FromQuery] int count = 10)
+        {
+            // Reusing FilterAsync to get recent files
+            var (items, _) = await _unitOfWork.Files.FilterAsync(
+                null, null, null, null, null, null, "newest", 1, count
+            );
+            
+            var result = items.Select(f => new FileResponseDto
+            {
+                FileID = f.FileID,
+                FileName = f.FileName,
+                FileType = f.FileType.ToString(),
+                UploadDate = f.UploadDate,
+                UploaderName = f.Uploader?.Username ?? "Unknown",
+                CourseName = f.Course?.CourseName ?? "Unknown",
+                ProfessorName = f.Professor?.ProfessorName ?? "Unknown",
+                DocumentTypeName = f.DocumentType?.TypeName.ToString() ?? "Unknown",
+                CourseID = f.CourseID,
+                ProfessorID = f.ProfessorID,
+                DocumentTypeID = f.DocumentTypeID,
+                UploaderID = f.UploaderID
+            });
+
             return Ok(result);
         }
 
-        /// <summary>
-        /// Get single file by id including related metadata.
-        /// </summary>
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> Get(int id)
-        {
-            // Build include paths manually to avoid nameof(File) ambiguity
-            var file = await _unitOfWork.Files.GetAsync(f => f.FileID == id,
-                "Course.Major.University",
-                "Course.AcademicLevel",
-                "Course.Semester",
-                "Professor",
-                "DocumentType");
-            if (file == null) return NotFound(new { message = "File not found" });
-            return Ok(MapToDto(file));
-        }
-
-        /// <summary>
-        /// Download physical file content.
-        /// </summary>
-        [HttpGet("{id:int}/download")]
-        public async Task<IActionResult> Download(int id)
-        {
-            var file = await _unitOfWork.Files.GetAsync(f => f.FileID == id, "Course");
-            if (file == null) return NotFound(new { message = "File not found" });
-
-            var uploadsPath = Path.Combine(_env.WebRootPath ?? Path.Combine(_env.ContentRootPath, "wwwroot"), "uploads");
-            var physicalPath = Path.Combine(uploadsPath, file.FileName);
-            if (!System.IO.File.Exists(physicalPath))
-            {
-                _logger.LogWarning("File content missing on disk for FileID {FileId} at {Path}", id, physicalPath);
-                return NotFound(new { message = "file content storage not configured or file missing" });
-            }
-
-            var stream = System.IO.File.OpenRead(physicalPath);
-            var contentType = GetContentType(file.FileName);
-            return File(stream, contentType, file.FileName);
-        }
-
-        /// <summary>
-        /// Get recent uploaded files (optionally for a specific course).
-        /// </summary>
-        [HttpGet("recent")]
-        public async Task<IActionResult> Recent([FromQuery] int? courseId, [FromQuery] int count = 10)
-        {
-            if (count <= 0 || count > 100) return BadRequest(new { message = "count must be between 1 and 100" });
-            IEnumerable<Core.Entities.File> files;
-            if (courseId.HasValue)
-            {
-                files = await _unitOfWork.Files.GetLatestForCourseAsync(courseId.Value);
-            }
-            else
-            {
-                var all = await _unitOfWork.Files.GetAllAsync(null,
-                    "Course.Major.University",
-                    "Course.AcademicLevel",
-                    "Course.Semester",
-                    "Professor",
-                    "DocumentType");
-                files = all.OrderByDescending(f => f.UploadDate).Take(count);
-            }
-            return Ok(files.Take(count).Select(f => MapToDto(f)));
-        }
-
-        /// <summary>
-        /// Popular files placeholder (not implemented yet).
-        /// </summary>
         [HttpGet("popular")]
-        public IActionResult Popular()
+        public IActionResult GetPopular()
         {
-            return StatusCode(501, new { message = "Not implemented" });
+            // Placeholder as requested
+            return Ok(new List<FileResponseDto>());
         }
 
-        private static FileDto MapToDto(Core.Entities.File f)
+        [HttpPost]
+        public async Task<IActionResult> Upload([FromForm] CreateFileDto dto)
         {
-            return new FileDto
+            if (dto.File == null || dto.File.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            // Validate related entities exist
+            if (!await _unitOfWork.Users.ExistsAsync(u => u.UserID == dto.UploaderId))
+                return BadRequest("Invalid Uploader ID.");
+
+            if (!await _unitOfWork.Courses.ExistsAsync(c => c.CourseID == dto.CourseId))
+                return BadRequest("Invalid Course ID.");
+
+            if (!await _unitOfWork.Professors.ExistsAsync(p => p.ProfessorID == dto.ProfessorId))
+                return BadRequest("Invalid Professor ID.");
+
+            if (!await _unitOfWork.DocumentTypes.ExistsAsync(d => d.DocumentTypeID == dto.DocumentTypeId))
+                return BadRequest("Invalid Document Type ID.");
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            // Use a unique filename to prevent overwrites
+            var uniqueFileName = $"{Guid.NewGuid()}_{dto.File.FileName}";
+            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
             {
-                FileId = f.FileID,
-                FileName = f.FileName,
-                FileType = f.FileType,
-                UploadDate = f.UploadDate,
-                Course = f.Course != null ? new SimpleEntityDto { Id = f.Course.CourseID, Name = f.Course.CourseName } : new(),
-                Major = f.Course?.Major != null ? new SimpleEntityDto { Id = f.Course.Major.MajorID, Name = f.Course.Major.MajorName } : new(),
-                University = f.Course?.Major?.University != null ? new SimpleEntityDto { Id = f.Course.Major.University.UniversityID, Name = f.Course.Major.University.UniversityName } : new(),
-                AcademicLevel = f.Course?.AcademicLevel != null ? new SimpleEntityDto { Id = f.Course.AcademicLevel.LevelID, Name = f.Course.AcademicLevel.LevelName.ToString() } : new(),
-                Semester = f.Course?.Semester != null ? new SimpleEntityDto { Id = f.Course.Semester.SemesterID, Name = f.Course.Semester.SemesterName } : new(),
-                DocumentType = f.DocumentType != null ? new SimpleEntityDto { Id = f.DocumentType.DocumentTypeID, Name = f.DocumentType.TypeName.ToString() } : new(),
-                Professor = f.Professor != null ? new SimpleEntityDto { Id = f.Professor.ProfessorID, Name = f.Professor.ProfessorName } : new(),
+                await dto.File.CopyToAsync(stream);
+            }
+
+            var fileEntity = new Core.Entities.File
+            {
+                FileName = uniqueFileName,
+                UploadDate = DateOnly.FromDateTime(DateTime.Now),
+                UploaderID = dto.UploaderId,
+                CourseID = dto.CourseId,
+                ProfessorID = dto.ProfessorId,
+                DocumentTypeID = dto.DocumentTypeId
             };
+
+            // Simple extension mapping
+            var ext = Path.GetExtension(dto.File.FileName).ToLower();
+            fileEntity.FileType = ext switch
+            {
+                ".pdf" => enFileType.PDF,
+                ".doc" => enFileType.DOCX,
+                ".docx" => enFileType.DOCX,
+                // Add other mappings as needed, defaulting to PDF or a generic type if available
+                _ => enFileType.PDF 
+            };
+
+            await _unitOfWork.Files.AddAsync(fileEntity);
+            await _unitOfWork.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetById), new { id = fileEntity.FileID }, new { fileEntity.FileID, fileEntity.FileName });
         }
 
-        private static string GetContentType(string fileName)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var ext = Path.GetExtension(fileName).ToLowerInvariant();
-            return ext switch
+            var file = await _unitOfWork.Files.FindAsync(id);
+            if (file == null) return NotFound();
+
+            var uploadsFolder = Path.Combine(_environment.WebRootPath ?? _environment.ContentRootPath, "uploads");
+            var filePath = Path.Combine(uploadsFolder, file.FileName);
+
+            if (System.IO.File.Exists(filePath))
             {
-                ".pdf" => "application/pdf",
-                ".doc" => "application/msword",
-                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                ".ppt" => "application/vnd.ms-powerpoint",
-                ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                ".xls" => "application/vnd.ms-excel",
-                ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                ".txt" => "text/plain",
-                ".zip" => "application/zip",
-                ".rar" => "application/vnd.rar",
-                ".jpg" => "image/jpeg",
-                ".jpeg" => "image/jpeg",
-                ".png" => "image/png",
-                ".gif" => "image/gif",
-                _ => "application/octet-stream"
-            };
+                System.IO.File.Delete(filePath);
+            }
+
+            await _unitOfWork.Files.DeleteAsync(f => f.FileID == id);
+            await _unitOfWork.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }
