@@ -1,5 +1,7 @@
 using Core.Entities;
 using Core.Enums;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 public interface IFileRepository : IGenericRepository<Core.Entities.File>
 {
     Task<IEnumerable<Core.Entities.File>> GetLatestForCourseAsync(int courseId);
@@ -9,8 +11,6 @@ public interface IFileRepository : IGenericRepository<Core.Entities.File>
         int? universityId,
         int? majorId,
         int? courseId,
-        int? academicLevelId,
-        int? semesterId,
         int? documentTypeId,
         int? professorId,
         string? search,
