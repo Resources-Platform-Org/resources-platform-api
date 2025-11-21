@@ -1,53 +1,122 @@
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models; // added
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;  
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi(); // keeps minimal OpenAPI support
-
-// Register MVC controllers so actions are discovered
+// --------------------------------------------------
+// Add controllers
+// --------------------------------------------------
 builder.Services.AddControllers();
-// Explorer for endpoint metadata used by Swagger/Swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
-// Add Swashbuckle Swagger generation
-builder.Services.AddSwaggerGen(options =>
+// --------------------------------------------------
+// Load JWT settings from appsettings.json
+// --------------------------------------------------
+var jwtSettings = builder.Configuration.GetSection("JWT").Get<JwtSettings>();
+builder.Services.AddSingleton(jwtSettings);
+
+// Register JWT service
+builder.Services.AddScoped<JwtService>();
+
+// --------------------------------------------------
+// JWT Authentication
+// --------------------------------------------------
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+
+            ValidateLifetime = true,
+
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtSettings.Key))
+        };
+    });
+
+builder.Services.AddAuthorization();
+
+// --------------------------------------------------
+// Swagger + JWT Support
+// --------------------------------------------------
+builder.Services.AddSwaggerGen(c =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
+    c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Resources Platform API",
-        Version = "v1",
-        Description = "API documentation for Resources Platform",
+        Version = "v1"
+    });
+
+    // JWT Authorization in Swagger UI
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter: Bearer {your token}"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Id = "Bearer",
+                    Type = ReferenceType.SecurityScheme
+                }
+            },
+            new List<string>()
+        }
     });
 });
 
-var ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+// --------------------------------------------------
+// DB Context
+// --------------------------------------------------
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new Exception("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(ConnectionString));
+    options.UseSqlServer(connectionString));
 
+// --------------------------------------------------
+// Build App
+// --------------------------------------------------
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// --------------------------------------------------
+// Enable Swagger
+// --------------------------------------------------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Resources Platform API v1");
-    });
-
-    app.MapOpenApi(); // existing minimal openapi mapping (optional)
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
 
-// Map controller endpoints
+// --------------------------------------------------
+// Add Authentication & Authorization Middleware
+// --------------------------------------------------
+app.UseAuthentication();
+app.UseAuthorization();
+
+// --------------------------------------------------
+// Map API Controllers
+// --------------------------------------------------
 app.MapControllers();
 
 app.Run();
-
