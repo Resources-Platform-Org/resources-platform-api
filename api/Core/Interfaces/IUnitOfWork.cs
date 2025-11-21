@@ -12,6 +12,7 @@ namespace Core.Interfaces
         IDocumentTypeRepository DocumentTypes { get; }
         IMajorUniversityRepository MajorUniversities { get; }
         ISemesterRepository Semesters { get; }
+        IAcademicLevelRepository AcademicLevels { get; }
         Task<int> SaveChangesAsync();
     }
 }
