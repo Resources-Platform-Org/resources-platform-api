@@ -7,33 +7,48 @@ namespace Infrastructure.Repository
 {
     public class FileRepository : GenericRepository<Core.Entities.File>, IFileRepository
     {
-        private readonly ApplicationDbContext _context ;
+        private readonly ApplicationDbContext _context;
+
         public FileRepository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
+
+        private IQueryable<Core.Entities.File> BaseFilesQuery(bool noTracking = true)
+        {
+            var query = _context.Files.AsQueryable();
+
+            if (noTracking)
+                query = query.AsNoTracking();
+
+            return query
+                .Include(f => f.Course)
+                    .ThenInclude(c => c.Major)
+                        .ThenInclude(m => m.University)
+
+                .Include(f => f.Professor)
+                .Include(f => f.DocumentType)
+                .Include(f => f.Uploader);
+        }
+
         public async Task<IEnumerable<Core.Entities.File>> GetLatestForCourseAsync(int courseId)
         {
-            return await _context.Files
-                .AsNoTracking()
-                .Where(c => c.CourseID == courseId)
+            return await BaseFilesQuery()
+                .Where(f => f.CourseID == courseId)
                 .OrderByDescending(f => f.UploadDate)
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Core.Entities.File>> SearchAsync(int courseId, int? professorId, enDocument documentType)
         {
-            var query = _context.Files
-                .AsNoTracking()
-                .Include(f => f.Course).ThenInclude(c => c.Major).ThenInclude(m => m.University)
-                .Include(f => f.Professor)
-                .Include(f => f.DocumentType)
-                .Where(f => f.CourseID == courseId && documentType == f.DocumentType.TypeName);
+            var query = BaseFilesQuery()
+                .Where(f =>
+                    f.CourseID == courseId &&
+                    f.DocumentType.TypeName == documentType
+                );
 
             if (professorId.HasValue)
-            {
-                query = query.Where(p => p.ProfessorID == professorId.Value);
-            }
+                query = query.Where(f => f.ProfessorID == professorId.Value);
 
             return await query
                 .OrderByDescending(f => f.UploadDate)
@@ -44,8 +59,6 @@ namespace Infrastructure.Repository
             int? universityId,
             int? majorId,
             int? courseId,
-            int? academicLevelId,
-            int? semesterId,
             int? documentTypeId,
             int? professorId,
             string? search,
@@ -53,38 +66,49 @@ namespace Infrastructure.Repository
             int page,
             int pageSize)
         {
-            var files = _context.Files.AsNoTracking()
-                .Include(f => f.Course).ThenInclude(c => c.Major).ThenInclude(m => m.University)
-                .Include(f => f.Course).ThenInclude(c => c.AcademicLevel)
-                .Include(f => f.Course).ThenInclude(c => c.Semester)
-                .Include(f => f.Professor)
-                .Include(f => f.DocumentType)
-                .AsQueryable();
+            var query = BaseFilesQuery();
 
+            // Filtering based on existing fields only
             if (courseId.HasValue)
-                files = files.Where(f => f.CourseID == courseId.Value);
+                query = query.Where(f => f.CourseID == courseId.Value);
+
             if (majorId.HasValue)
-                files = files.Where(f => f.Course.MajorID == majorId.Value);
+                query = query.Where(f => f.Course.MajorID == majorId.Value);
+
             if (universityId.HasValue)
-                files = files.Where(f => f.Course.Major.UniversityID == universityId.Value);
-            if (academicLevelId.HasValue)
-                files = files.Where(f => f.Course.LevelID == academicLevelId.Value);
-            if (semesterId.HasValue)
-                files = files.Where(f => f.Course.SemesterID == semesterId.Value);
+                query = query.Where(f => f.Course.Major.UniversityID == universityId.Value);
+
             if (documentTypeId.HasValue)
-                files = files.Where(f => f.DocumentTypeID == documentTypeId.Value);
+                query = query.Where(f => f.DocumentTypeID == documentTypeId.Value);
+
             if (professorId.HasValue)
-                files = files.Where(f => f.ProfessorID == professorId.Value);
+                query = query.Where(f => f.ProfessorID == professorId.Value);
+
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var term = search.Trim().ToLower();
-                files = files.Where(f => f.FileName.ToLower().Contains(term) || f.Course.CourseName.ToLower().Contains(term));
+                query = query.Where(f =>
+                    f.FileName.ToLower().Contains(term) ||
+                    f.Course.CourseName.ToLower().Contains(term)
+                );
             }
 
-            files = sort?.ToLower() == "oldest" ? files.OrderBy(f => f.UploadDate) : files.OrderByDescending(f => f.UploadDate);
+            var ordered = (sort ?? "").Trim().ToLower() switch
+            {
+                "oldest" => query.OrderBy(f => f.UploadDate),
+                _ => query.OrderByDescending(f => f.UploadDate),
+            };
 
-            var total = await files.CountAsync();
-            var items = await files.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            var total = await ordered.CountAsync();
+
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize <= 0 ? 10 : pageSize;
+
+            var items = await ordered
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             return (items, total);
         }
     }
