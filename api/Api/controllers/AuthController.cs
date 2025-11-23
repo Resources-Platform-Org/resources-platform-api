@@ -23,12 +23,11 @@ namespace Api.controllers
             if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
                 return BadRequest(new { message = "Username and password are required." });
 
-            var user = await _unitOfWork.Users.FindAsync(request.Username);
+            var user = await _unitOfWork.Users.GetAsync(u => u.Username == request.Username);
             
-            if (user == null)
+            if (user == null || user.PasswordHash != request.Password)
                 return Unauthorized(new { message = "Invalid username or password." });
 
-            // Generate JWT token
             var token = _jwtService.GenerateToken(user);
             return Ok(new LoginResponse
             {
