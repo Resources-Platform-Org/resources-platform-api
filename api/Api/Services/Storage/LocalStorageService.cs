@@ -32,11 +32,14 @@ namespace Api.Services.Storage
                 throw new ArgumentException("File size exceeds 20 MB.");
 
             var allowedExtensions = new[] { ".pdf", ".docx", ".pptx", ".jpg", ".jpeg", ".png" };
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-            if (!allowedExtensions.Contains(extension))
+            var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
                 throw new ArgumentException("Invalid file type. Allowed: pdf, docx, pptx, jpg, jpeg, png.");
 
-            var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
+            var extension = string.IsNullOrEmpty(fileExtension) ? string.Empty : fileExtension;
+            var uniqueFileName = string.IsNullOrEmpty(extension)
+                ? Guid.NewGuid().ToString("N")
+                : $"{Guid.NewGuid():N}{extension}";
             var filePath = Path.Combine(_uploadsFolder, uniqueFileName);
 
             using (var stream = new FileStream(filePath, FileMode.Create))
