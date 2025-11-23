@@ -1,8 +1,11 @@
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System.Text;  
+using System.Text;
+using Api.Services.FileServices;
+using Api.Services.Storage;  
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +23,12 @@ builder.Services.AddSingleton(jwtSettings);
 
 // Register JWT service
 builder.Services.AddScoped<JwtService>();
+
+// Add application services (FileService, StorageService, etc.)
+builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IStorageService, LocalStorageService>();
+builder.Services.AddHttpContextAccessor();
+
 
 // --------------------------------------------------
 // JWT Authentication
@@ -96,6 +105,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Build App
 // --------------------------------------------------
 var app = builder.Build();
+
+// --------------------------------------------------
+// Static Files Setup
+// --------------------------------------------------
+var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Resources", "Uploads");
+if (!Directory.Exists(uploadsPath))
+    Directory.CreateDirectory(uploadsPath);
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
 
 // --------------------------------------------------
 // Enable Swagger
