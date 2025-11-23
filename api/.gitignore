@@ -1,0 +1,15 @@
+**/Resources/
+
+# .NET build artifacts
+bin/
+obj/
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.userprefs
+
+# VS Code
+.vscode/
+
