@@ -1,0 +1,71 @@
+{
+  "client": "Thunder Client",
+  "collectionName": "Resources Platform API",
+  "dateExported": "2025-11-24T12:00:00.000Z",
+  "version": "1.1",
+  "folders": [
+    {
+      "name": "Auth",
+      "containerId": ""
+    },
+    {
+      "name": "Files",
+      "containerId": ""
+    },
+    {
+      "name": "Users",
+      "containerId": ""
+    },
+    {
+      "name": "Admin",
+      "containerId": ""
+    }
+  ],
+  "requests": [
+    {
+      "name": "Login Admin",
+      "method": "POST",
+      "url": "{{host}}/Auth",
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"adminPassword123\"\n}"
+      },
+      "tests": [
+        {
+          "type": "res-code",
+          "custom": "",
+          "action": "equal",
+          "value": "200"
+        },
+        {
+          "type": "set-env-var",
+          "custom": "json.token",
+          "action": "setto",
+          "value": "{{adminToken}}"
+        }
+      ]
+    },
+    {
+      "name": "List Files",
+      "method": "GET",
+      "url": "{{host}}/api/Files/list",
+      "params": [
+        {
+          "name": "page",
+          "value": "1"
+        }
+      ]
+    },
+    {
+      "name": "Get Me",
+      "method": "GET",
+      "url": "{{host}}/api/Users/me",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{userToken}}"
+        }
+      ]
+    }
+  ]
+}

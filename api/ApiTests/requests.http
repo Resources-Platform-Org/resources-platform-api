@@ -1,0 +1,244 @@
+@host = http://localhost:5041//
+@adminToken = {{loginAdmin.response.body.token}}
+@userToken = {{loginUser.response.body.token}}
+
+### ------------------------------------------------------------------------
+### Auth
+### ------------------------------------------------------------------------
+
+# @name loginAdmin
+POST {{host}}/Auth
+Content-Type: application/json
+
+{
+  "username": "Ali",
+  "password": "12345"
+}
+
+###
+
+# @name loginUser
+POST {{host}}/Auth
+Content-Type: application/json
+
+{
+  "username": "muhammed",
+  "password": "12345"
+}
+
+### ------------------------------------------------------------------------
+### Files (Admin & User)
+### ------------------------------------------------------------------------
+
+### List Files (Public)
+GET {{host}}/api/Files/list?page=1&pageSize=10
+Content-Type: application/json
+
+### Get File By ID (Authenticated)
+GET {{host}}/api/Files/1
+Authorization: Bearer {{userToken}}
+
+### Download File (Authenticated)
+GET {{host}}/api/Files/download/test-file.pdf
+Authorization: Bearer {{userToken}}
+
+### Upload File (Admin Only)
+POST {{host}}/api/Files/upload
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="CourseId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="ProfessorId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="DocumentTypeId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="UploaderId"
+
+1
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="File"; filename="test.txt"
+Content-Type: text/plain
+
+This is a test file content.
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### Delete File (Admin Only)
+DELETE {{host}}/api/Files/1
+Authorization: Bearer {{adminToken}}
+
+### ------------------------------------------------------------------------
+### Users
+### ------------------------------------------------------------------------
+
+### Get Me (Authenticated)
+GET {{host}}/api/Users/me
+Authorization: Bearer {{userToken}}
+
+### Create User (Public)
+POST {{host}}/api/Users
+Content-Type: application/json
+
+{
+  "username": "newuser",
+  "email": "newuser@example.com",
+  "password": "Password123!"
+}
+
+### Get All Users (Admin Only)
+GET {{host}}/api/Users?pageNumber=1&pageSize=10
+Authorization: Bearer {{adminToken}}
+
+### Get User By ID (Admin Only)
+GET {{host}}/api/Users/1
+Authorization: Bearer {{adminToken}}
+
+### Update User (Admin Only)
+PUT {{host}}/api/Users/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "username": "updateduser",
+  "email": "updated@example.com",
+  "role": 1
+}
+
+### Delete User (Admin Only)
+DELETE {{host}}/api/Users/1
+Authorization: Bearer {{adminToken}}
+
+### ------------------------------------------------------------------------
+### Admin Controllers (Admin Only)
+### ------------------------------------------------------------------------
+
+### --- Universities ---
+
+### Get All Universities
+GET {{host}}/api/Universities
+Authorization: Bearer {{adminToken}}
+
+### Create University
+POST {{host}}/api/Universities
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "universityName": "Test University"
+}
+
+### Update University
+PUT {{host}}/api/Universities/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "universityName": "Updated University"
+}
+
+### Delete University
+DELETE {{host}}/api/Universities/1
+Authorization: Bearer {{adminToken}}
+
+### --- Majors ---
+# NOTE: MajorsController seems to be missing [Authorize] attribute in source code!
+
+### Get All Majors
+GET {{host}}/api/Majors
+Authorization: Bearer {{adminToken}}
+
+### Create Major
+POST {{host}}/api/Majors
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "majorName": "Computer Science",
+  "universityID": 1
+}
+
+### --- Courses ---
+
+### Get All Courses
+GET {{host}}/api/Courses
+Authorization: Bearer {{adminToken}}
+
+### Create Course
+POST {{host}}/api/Courses
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "courseName": "Intro to CS",
+  "courseCode": "CS101",
+  "majorID": 1,
+  "levelID": 1,
+  "semesterID": 1
+}
+
+### --- Professors ---
+
+### Get All Professors
+GET {{host}}/api/Professors
+Authorization: Bearer {{adminToken}}
+
+### Create Professor
+POST {{host}}/api/Professors
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "professorName": "Dr. Smith"
+}
+
+### --- Semesters ---
+
+### Get All Semesters
+GET {{host}}/api/Semesters
+Authorization: Bearer {{adminToken}}
+
+### Create Semester
+POST {{host}}/api/Semesters
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "semesterName": "Fall 2025"
+}
+
+### --- Academic Levels ---
+
+### Get All Levels
+GET {{host}}/api/academic-levels
+Authorization: Bearer {{adminToken}}
+
+### Create Level
+POST {{host}}/api/academic-levels
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "levelName": "Freshman"
+}
+
+### --- Document Types ---
+
+### Get All Doc Types
+GET {{host}}/api/document-types
+Authorization: Bearer {{adminToken}}
+
+### Create Doc Type
+POST {{host}}/api/document-types
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "typeName": "LectureNotes"
+}
