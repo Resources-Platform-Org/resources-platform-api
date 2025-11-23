@@ -5,7 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Api.Services.FileServices;
-using Api.Services.Storage;  
+using Api.Services.Storage;
+using Core.Interfaces;
+using Infrastructure.Repository;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +29,21 @@ builder.Services.AddScoped<JwtService>();
 // Add application services (FileService, StorageService, etc.)
 builder.Services.AddScoped<IFileService, FileService>();
 builder.Services.AddScoped<IStorageService, LocalStorageService>();
+
+// Add Unit of Work & Repositories
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
+builder.Services.AddScoped<IFileRepository, FileRepository>();
+builder.Services.AddScoped<ICourseRepository, CourseRepository>();
+builder.Services.AddScoped<IProfessorRepository, ProfessorRepository>();
+builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
+builder.Services.AddScoped<IMajorUniversityRepository, MajorUniversityRepository>();
+builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
+builder.Services.AddScoped<IAcademicLevelRepository, AcademicLevelRepository>();
+
+
+// Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
 
 
