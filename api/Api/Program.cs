@@ -1,4 +1,4 @@
-using Infrastructure.Data;
+﻿using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -118,14 +118,28 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
+
+// --------------------------------------------------
+// CORS Policy
+// --------------------------------------------------
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
+
 // --------------------------------------------------
 // Build App
 // --------------------------------------------------
 var app = builder.Build();
 
-// --------------------------------------------------
-// Static Files Setup
-// --------------------------------------------------
+// Static Files
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Resources", "Uploads");
 if (!Directory.Exists(uploadsPath))
     Directory.CreateDirectory(uploadsPath);
@@ -136,26 +150,22 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-// --------------------------------------------------
-// Enable Swagger
-// --------------------------------------------------
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// IMPORTANT: Disable HTTPS redirection while testing locally
+// app.UseHttpsRedirection();
 
-// --------------------------------------------------
-// Add Authentication & Authorization Middleware
-// --------------------------------------------------
+// ❗CORS must come BEFORE authentication & authorization
+app.UseCors("AllowAngular");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
-// --------------------------------------------------
-// Map API Controllers
-// --------------------------------------------------
 app.MapControllers();
 
 app.Run();

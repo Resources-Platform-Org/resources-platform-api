@@ -1,15 +1,73 @@
 **/Resources/
 
-# .NET build artifacts
-bin/
-obj/
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Rr]elease*/
+[Dd]ebug*/
+out/
+artifacts/
+publish/
 
-# Visual Studio files
+# Visual Studio
 .vs/
 *.user
 *.suo
 *.userprefs
+*.userosscache
+*.sln.docstates
+
+# IDE caches
+.idea/
+*.sln.iml
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Build + test logs
+TestResult*/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.log
+*.svclog
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+**/packages/*
+!**/packages/build/
+*.nuget.props
+*.nuget.targets
+.nuget/packages.config
+
+# Publish profiles
+*.PublishSettings
+*.pubxml
+*.pubxml.user
+
+# Azure + IIS
+app.publishsettings
+*.wappconfig
+*.azurePubxml
+*.dbmdl
+*.mdf
+*.ldf
+
+# Other tooling
+StyleCop.Cache
+.sonarqube/
+node_modules/
 
 # VS Code
 .vscode/
+
+# OS artifacts
+Thumbs.db
+Desktop.ini
+.DS_Store
 
