@@ -1,9 +1,10 @@
 ﻿namespace Core.Entities;
 public class Professor
 {
-    public int ProfessorID { get; set; }
-    public string ProfessorName { get; set; } = string.Empty;
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Phone { get; set; } = string.Empty;
+
     // Navigation Properties
-    public ICollection<File> Files { get; set; } = new List<File>();
-    public ICollection<CourseProfessor> CourseProfessors { get; set; } = new List<CourseProfessor>();
+    public ICollection<Course> Courses { get; set; } = new List<Course>();
 }

@@ -19,10 +19,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<University> Universities { get; set; }
     public DbSet<Major> Majors { get; set;}
     public DbSet<Course> Courses { get; set; }
-    public DbSet<AcademicLevel> AcademicLevels { get; set; }
-    public DbSet<Semester> Semesters { get; set; }
+    public DbSet<CourseMajor> CourseMajors { get; set; }
     public DbSet<Professor> Professors { get; set; }
-    public DbSet<CourseProfessor> CourseProfessors { get; set; }
     public DbSet<Core.Entities.File> Files { get; set; }
     public DbSet<DocumentType> DocumentTypes { get; set; }
     public DbSet<User> Users { get; set; }

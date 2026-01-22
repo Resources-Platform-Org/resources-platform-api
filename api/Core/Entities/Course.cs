@@ -1,17 +1,12 @@
 ﻿namespace Core.Entities;
 public class Course
 {
-    public int CourseID { get; set; }
-    public string CourseName { get; set; } = string.Empty;
-    public string CourseCode { get; set; } = string.Empty;
-    // Foreign Keys
-    public int MajorID { get; set; }
-    public int LevelID { get; set; }
-    public int SemesterID { get; set; }
+    public long Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Code { get; set; } = string.Empty;
+
     // Navigation Properties
-    public Major? Major { get; set; }
-    public AcademicLevel AcademicLevel { get; set; } = default!;
-    public Semester Semester { get; set; } = default!;
+    public ICollection<CourseMajor> CourseMajors { get; set; } = new List<CourseMajor>();
+    public ICollection<Professor> Professors { get; set; } = new List<Professor>();
     public ICollection<File> Files { get; set; } = new List<File>();
-    public ICollection<CourseProfessor> CourseProfessors { get; set; } = new List<CourseProfessor>();
-}
+  }

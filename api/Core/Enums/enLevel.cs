@@ -1,10 +1,14 @@
-public enum enLevel
+using System;
+namespace Core.Enums
 {
-    FirstYear,
-    SecondYear,
-    ThirdYear,
-    FourthYear,
-    FifthYear,
-    SixthYear, 
-    SeventhYear,
+    public enum enLevel
+{
+    FirstYear   = 1,
+    SecondYear  = 2,
+    ThirdYear   = 3,
+    FourthYear  = 4,
+    FifthYear   = 5,
+    SixthYear   = 6, 
+    SeventhYear = 7,
+}
 }
