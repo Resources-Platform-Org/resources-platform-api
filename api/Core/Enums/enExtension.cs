@@ -1,8 +1,8 @@
 namespace Core.Enums
 {
-    public enum enFileType
+    public enum enExtension
     {
-        PDF,
+        PDF = 1,
         DOCX,
         PPTX,
         XLSX,

@@ -1,5 +1,5 @@
-public enum enRoles
+public enum enRoles : byte
 {
-    Admin, 
-    User
+    Admin = 1, 
+    User  = 2,
 }

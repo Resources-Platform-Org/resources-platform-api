@@ -1,6 +1,7 @@
+using Core.Enums;
 public enum enDocument
 {
-    Exam,
-    Summary,
-    LectureNotes,
+    Exam         = 1 ,
+    Summary      = 2 ,
+    LectureNotes = 3 ,
 }

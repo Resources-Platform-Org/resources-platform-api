@@ -1,11 +1,12 @@
 ﻿namespace Core.Entities;
 public class Major
 {
-    public int MajorID { get; set; }
-    public string MajorName { get; set; } = string.Empty;
-    // Foreginkey :-
-    public int UniversityID { get; set; }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    // Foreign key :-
+    public int UniversityId { get; set; }
+
     // Navigation Properties
     public University University { get; set; } = default!;
-    public ICollection<Course> Courses { get; set; } = new List<Course>();
+    public ICollection<CourseMajor> CourseMajors { get; set; } = new List<CourseMajor>();
 }
