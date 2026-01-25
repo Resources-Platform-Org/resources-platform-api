@@ -4,7 +4,6 @@ namespace Core.Entities
 {
     public class CourseMajor
     {
-        public int Id {get; set;}
         public enSemester Semester {get; set;}
         public enLevel Level {get; set;}
 

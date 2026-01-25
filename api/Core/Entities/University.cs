@@ -1,7 +1,7 @@
 ﻿namespace Core.Entities;
 public class University
 {
-    public int ID { get; set; }
+    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
 
     // Navigation property

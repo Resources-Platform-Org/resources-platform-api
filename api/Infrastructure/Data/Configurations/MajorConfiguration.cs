@@ -8,14 +8,13 @@ public class MajorConfiguration : IEntityTypeConfiguration<Major>
 {
     public void Configure(EntityTypeBuilder<Major> builder)
     {
-        builder.HasKey(x => x.MajorID);
-        builder.Property(x => x.MajorName)
-        .HasMaxLength(100).IsRequired();
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name).HasMaxLength(50)
+            .IsRequired();
 
-        // Define relationships between University and Major
-        // A University can have many Majors, but a Major belongs to one University
-        builder.HasOne<University>(u => u.University)
-            .WithMany(m => m.Majors)
-            .HasForeignKey(x => x.UniversityID);
+        // Realtionships :-
+        builder.HasOne<University>(x => x.University)
+            .WithMany(x => x.Majors)
+            .HasForeignKey(x => x.UniversityId);
     }
 }

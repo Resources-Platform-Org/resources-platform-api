@@ -8,8 +8,9 @@ public class DocumentTypeConfiguration : IEntityTypeConfiguration<DocumentType>
 {
     public void Configure(EntityTypeBuilder<DocumentType> builder)
     {
-        builder.HasKey(x => x.DocumentTypeID);
-        builder.Property(x => x.TypeName)
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name)
+            .HasMaxLength(50)
             .IsRequired();
     }
 }

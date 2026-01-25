@@ -1,11 +1,13 @@
+using System;
 using Core.Entities;
-using Core.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+namespace Infrastructure.Repository;
 
 public class UserRepository : GenericRepository<User>, IUserRepository
 {
     private readonly ApplicationDbContext _context;
+
     public UserRepository(ApplicationDbContext context) : base(context)
     {
         _context = context;
@@ -13,25 +15,26 @@ public class UserRepository : GenericRepository<User>, IUserRepository
 
     public async Task<User?> GetUserByEmailAsync(string email)
     {
-        return await _context.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email == email);
+        var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+        return user;
     }
+
     public async Task<string?> GetUserRoleAsync(User user)
     {
-        if (user == null) throw new ArgumentNullException(nameof(user));
-        
-        var role = await _context.Users
-            .AsNoTracking()
-            .Where(u => u.UserID == user.UserID)
-            .Select(r => (enRoles?)r.Role) 
+        // Re-fetch role from DB to ensure validity/freshness
+        var userRole = await _context.Users
+            .Where(u => u.Id == user.Id)
+            .Select(u => u.Role)
             .FirstOrDefaultAsync();
-        return role?.ToString() ;
+            
+        // If user not found or role invalid (0), return null or handle appropriately
+        if (userRole == 0) return null;
+
+        return userRole.ToString();
     }
-    public async Task<bool> IsUsernameOrEmailTakenAsync(string username, string email)
+
+    public Task<bool> IsEmailTakenAsync(string email)
     {
-        var isTaken = await _context.Users
-            .AnyAsync(u => username == u.Username || email == u.Email);
-        return isTaken;
+        return _context.Users.AnyAsync(u => u.Email == email);
     }
 }

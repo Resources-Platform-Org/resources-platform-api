@@ -1,42 +1,34 @@
-﻿using Core.Entities;
+using System;
+using Core.Entities;
+using Core.Enums;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+namespace Infrastructure.Repository;
 
-namespace Infrastructure.Repository
+public class CourseRepository : GenericRepository<Course>, ICourseRepository
 {
-    public class CourseRepository : GenericRepository<Course>, ICourseRepository
+    private readonly ApplicationDbContext _context;
+    public CourseRepository(ApplicationDbContext context) : base(context)
     {
-        private readonly ApplicationDbContext _context;
-        public CourseRepository(ApplicationDbContext context) : base(context)
-        {
-            _context = context;
-        }
-        public async Task<Course?> GetDetailsAsync(int courseId)
-        {
-            return await _context.Courses
-                .AsNoTracking()
-                .AsSplitQuery()
-                .Include(c => c.Major)
-                .Include(c => c.AcademicLevel)
-                .Include(c => c.Semester)
-                .Include(c => c.Files)
-                .Include(c => c.CourseProfessors)
-                    .ThenInclude(cp => cp.Professor)
-                .FirstOrDefaultAsync(c => c.CourseID == courseId);
-        }
+        _context = context;
+    }
 
-        public async Task<Course?> SearchAsync(string term) // term can be CourseName or CourseCode
-        {
-            if (string.IsNullOrWhiteSpace(term))
-            {
-                return null;
-            }
+    public async Task<IEnumerable<Course>> GetCoursesByLevelAndMajorAsync(int majorId, int levelId)
+    {
+        var result = await _context.Courses
+            .Where(c => c.CourseMajors.Any(cm => cm.MajorId == majorId && cm.Level == (enLevel)levelId))
+            .ToListAsync();
+        return result;
+    }
 
-            var normalizedTerm = term.Trim();
-
-            return await _context.Courses
-                .AsNoTracking()
-                .FirstOrDefaultAsync(c => c.CourseName == normalizedTerm || c.CourseCode == normalizedTerm);
-        }
+    public Task<Course?> GetCourseWithDetailsAsync(int courseId)
+    {
+        var course = _context.Courses
+            .Include(c => c.CourseMajors)
+                .ThenInclude(cm => cm.Major)
+            .Include(c => c.Professors)
+            .Include(c => c.Resources)
+            .FirstOrDefaultAsync(c => c.Id == courseId);
+        return course;
     }
 }
