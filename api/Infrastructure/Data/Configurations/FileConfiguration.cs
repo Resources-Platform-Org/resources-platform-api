@@ -8,35 +8,39 @@ public class FileConfiguration : IEntityTypeConfiguration<Core.Entities.File>
 {
     public void Configure(EntityTypeBuilder<Core.Entities.File> builder)
     {
-        builder.HasKey(x => x.FileID);
-        builder.Property(x => x.FileName)
-            .HasMaxLength(50).IsRequired();
-        builder.Property(x => x.FileType)
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+        builder.Property(x => x.Path)
+            .HasMaxLength(500)
+            .IsRequired();
+        builder.Property(x => x.DownloadsCount)
+            .HasDefaultValue(0);
+        builder.Property(x => x.IsApproved)
+            .HasDefaultValue(false);
+        builder.Property(x => x.Extension)
+            .HasConversion<byte>()
             .IsRequired();
 
-        // Define Relationships between file and User
-        // A User can have many Files, but a File belongs to one User
+        // ------------- Realtionships ------------
+        //-----------------------------------------
+        // User <-> File
         builder.HasOne<User>(u => u.Uploader)
             .WithMany(f => f.UploadedFiles)
-            .HasForeignKey(fu => fu.UploaderID);
+            .HasForeignKey(x => x.UploaderId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        // Define Relationships between file and DocumentType
-        // A DocumentType can have many Files, but a File belongs to one DocumentType
-        builder.HasOne<DocumentType>(dt => dt.DocumentType)
-        .WithMany(f => f.Files)
-        .HasForeignKey(fd => fd.DocumentTypeID);
-
-        // Define Relationships between file and Course
-        // A Course can have many Files, but a File belongs to one Course
+        // Course <-> File 
         builder.HasOne<Course>(c => c.Course)
             .WithMany(f => f.Files)
-            .HasForeignKey(cf => cf.CourseID);
+            .HasForeignKey(x => x.CourseId)
+            .OnDelete(DeleteBehavior.Restrict);
 
-        // Define Relationships between file and Professor
-        // A Professor can have many Files, but a File belongs to one Professor
-        builder.HasOne<Professor>(p => p.Professor)
+        // DocumentType <-> File
+        builder.HasOne<DocumentType>(d => d.DocumentType)
             .WithMany(f => f.Files)
-            .HasForeignKey(pf => pf.ProfessorID);
-
+            .HasForeignKey(x => x.DocumentTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

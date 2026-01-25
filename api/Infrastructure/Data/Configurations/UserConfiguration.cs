@@ -8,14 +8,23 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.HasKey(x => x.UserID);
-        builder.Property(x => x.Username)
-            .HasMaxLength(50).IsRequired();
+        builder.HasKey(x => x.Id);
+        builder.Property(x => x.Name)
+            .HasMaxLength(50)
+            .IsRequired();
         builder.Property(x => x.Email)
-            .HasMaxLength(100).IsRequired();
+            .HasMaxLength(100)
+            .IsRequired();
+        // create index for email to make it unique and effecient when search .
+        builder.HasIndex(x => x.Email)
+            .IsUnique();
+
         builder.Property(x => x.PasswordHash)
-            .HasMaxLength(50).IsRequired();
+            .HasMaxLength(500)
+            .IsRequired();
+
         builder.Property(x => x.Role)
+            .HasConversion<byte>()
             .IsRequired();
     }
 }

@@ -8,8 +8,8 @@ namespace Infrastructure.Data.Configurations
     {
         public void Configure(EntityTypeBuilder<University> builder)
         {
-            builder.HasKey(x => x.UniversityID);
-            builder.Property(x => x.UniversityName)
+            builder.HasKey(x => x.Id);
+            builder.Property(x => x.Name)
                 .HasMaxLength(100)
                 .IsRequired();
         }
