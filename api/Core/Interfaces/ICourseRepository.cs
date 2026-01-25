@@ -2,7 +2,7 @@ using Core.Entities;
 
 public interface ICourseRepository : IGenericRepository<Course>
 {
-    Task<Course?> GetDetailsAsync(int courseId);
-    Task<Course?> SearchAsync(string term);
+    Task<Course?> GetCourseWithDetailsAsync(int courseId);
+    Task<Course?> GetCoursesByLevelAndMajorAsync(int majorId , int levelId);
     
 }
