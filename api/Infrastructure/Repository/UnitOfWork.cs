@@ -7,13 +7,13 @@ public class UnitOfWork : IUnitOfWork
     private readonly ApplicationDbContext _context;
 
     public UnitOfWork(ApplicationDbContext context, IUserRepository users,
-        IUniversityRepository universities,
+        IGenericRepository<University> universities,
         IFileRepository files, ICourseRepository courses,
-        IProfessorRepository professors,
-        IDocumentTypeRepository documentTypes,
-        IMajorUniversityRepository majorUniversities,
-        ISemesterRepository semesters,
-        IAcademicLevelRepository academicLevels)
+        IGenericRepository<Professor> professors,
+        IGenericRepository<DocumentType> documentTypes,
+        IGenericRepository<CourseMajor> majorUniversities,
+        IGenericRepository<Major> majors
+        )
     {
         _context = context;
         Users = users;
@@ -21,30 +21,22 @@ public class UnitOfWork : IUnitOfWork
         Files = files;
         Courses = courses;
         Professors = professors;
-        DocumentTypes = documentTypes;
-        MajorUniversities = majorUniversities;
-        Semesters = semesters;
-        AcademicLevels = academicLevels;
+        DocumentsType = documentTypes;
+        CoursesMajors = majorUniversities;
+        Majors = majors;
     }
 
     public IUserRepository Users { get; }
-
-    public IUniversityRepository Universities { get; }
-
-    public IFileRepository Files { get; }
-
     public ICourseRepository Courses { get; }
+    public IFileRepository Files { get; }
+    public IGenericRepository<University> Universities { get; }
+    public IGenericRepository<DocumentType> DocumentsType { get; }
 
-    public IProfessorRepository Professors { get; }
+    public IGenericRepository<CourseMajor> CoursesMajors { get; }
+    public IGenericRepository<Professor> Professors { get; }
+    public IGenericRepository<Major> Majors { get; }
 
-    public IDocumentTypeRepository DocumentTypes { get; }
-
-    public IMajorUniversityRepository MajorUniversities { get; }
-
-    public ISemesterRepository Semesters { get; }
-
-    public IAcademicLevelRepository AcademicLevels { get; }
-
+    
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();
