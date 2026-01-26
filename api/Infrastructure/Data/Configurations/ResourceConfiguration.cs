@@ -4,9 +4,9 @@ using Core.Entities;
 
 namespace Infrastructure.Data.Configurations;
 
-public class FileConfiguration : IEntityTypeConfiguration<Core.Entities.File>
+public class ResourceConfiguration : IEntityTypeConfiguration<Resource>
 {
-    public void Configure(EntityTypeBuilder<Core.Entities.File> builder)
+    public void Configure(EntityTypeBuilder<Resource> builder)
     {
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name)
@@ -25,21 +25,21 @@ public class FileConfiguration : IEntityTypeConfiguration<Core.Entities.File>
 
         // ------------- Realtionships ------------
         //-----------------------------------------
-        // User <-> File
+        // User <-> Resource
         builder.HasOne<User>(u => u.Uploader)
-            .WithMany(f => f.UploadedFiles)
+            .WithMany(u => u.UploadedResources)
             .HasForeignKey(x => x.UploaderId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Course <-> File 
+        // Course <-> Resource 
         builder.HasOne<Course>(c => c.Course)
-            .WithMany(f => f.Files)
+            .WithMany(c => c.Resources)
             .HasForeignKey(x => x.CourseId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        // DocumentType <-> File
+        // DocumentType <-> Resource
         builder.HasOne<DocumentType>(d => d.DocumentType)
-            .WithMany(f => f.Files)
+            .WithMany(d => d.Resources)
             .HasForeignKey(x => x.DocumentTypeId)
             .OnDelete(DeleteBehavior.Restrict);
     }

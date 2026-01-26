@@ -6,7 +6,7 @@ namespace Core.Interfaces
     public interface IUnitOfWork
     {
         IUserRepository Users { get; }
-        IFileRepository Files { get; }
+        IResourceRepository Resources { get; }
         ICourseRepository Courses { get; }
         IGenericRepository<University> Universities { get; }
         IGenericRepository<Professor> Professors { get; }

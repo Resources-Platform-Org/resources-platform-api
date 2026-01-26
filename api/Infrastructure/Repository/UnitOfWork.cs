@@ -8,7 +8,7 @@ public class UnitOfWork : IUnitOfWork
 
     public UnitOfWork(ApplicationDbContext context, IUserRepository users,
         IGenericRepository<University> universities,
-        IFileRepository files, ICourseRepository courses,
+        IResourceRepository resources, ICourseRepository courses,
         IGenericRepository<Professor> professors,
         IGenericRepository<DocumentType> documentTypes,
         IGenericRepository<CourseMajor> majorUniversities,
@@ -18,7 +18,7 @@ public class UnitOfWork : IUnitOfWork
         _context = context;
         Users = users;
         Universities = universities;
-        Files = files;
+        Resources = resources;
         Courses = courses;
         Professors = professors;
         DocumentsType = documentTypes;
@@ -28,7 +28,7 @@ public class UnitOfWork : IUnitOfWork
 
     public IUserRepository Users { get; }
     public ICourseRepository Courses { get; }
-    public IFileRepository Files { get; }
+    public IResourceRepository Resources { get; }
     public IGenericRepository<University> Universities { get; }
     public IGenericRepository<DocumentType> DocumentsType { get; }
 
@@ -36,7 +36,7 @@ public class UnitOfWork : IUnitOfWork
     public IGenericRepository<Professor> Professors { get; }
     public IGenericRepository<Major> Majors { get; }
 
-    
+
     public async Task<int> SaveChangesAsync()
     {
         return await _context.SaveChangesAsync();

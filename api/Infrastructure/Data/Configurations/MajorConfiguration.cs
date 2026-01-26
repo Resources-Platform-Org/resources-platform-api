@@ -13,8 +13,8 @@ public class MajorConfiguration : IEntityTypeConfiguration<Major>
             .IsRequired();
 
         // Realtionships :-
-        builder.HasOne<University>(x => x.Id)
+        builder.HasOne<University>(x => x.University)
             .WithMany(x => x.Majors)
-            .HasForeignKey(x => x.Id);
+            .HasForeignKey(x => x.UniversityId);
     }
 }

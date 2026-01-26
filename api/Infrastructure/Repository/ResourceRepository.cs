@@ -1,18 +1,19 @@
 using System;
+using Core.Entities;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 namespace Infrastructure.Repository;
 
-public class FileRepository : GenericRepository<Core.Entities.File>, IFileRepository
+public class ResourceRepository : GenericRepository<Resource>, IResourceRepository
 {
     private readonly ApplicationDbContext _context;
-    public FileRepository(ApplicationDbContext context) : base(context)
+    public ResourceRepository(ApplicationDbContext context) : base(context)
     {
         _context = context;
     }
-    public async Task<IEnumerable<Core.Entities.File>> GetFilesByCourseAsync(int courseId, int? DocTypeId)
+    public async Task<IEnumerable<Resource>> GetResourcesByCourseAsync(int courseId, int? DocTypeId)
     {
-        var query = _context.Files
+        var query = _context.Resources
             .AsNoTracking()
             .Include(f => f.DocumentType)
             .Include(f => f.Uploader)
@@ -28,11 +29,11 @@ public class FileRepository : GenericRepository<Core.Entities.File>, IFileReposi
         return await query.ToListAsync();
     }
 
-    public async Task<int> IncrementDownloadCountAsync(int fileId)
+    public async Task<int> IncrementDownloadCountAsync(int resourceId)
     {
         // Using ExecuteUpdate for atomicity and performance (EF Core 7+)
-        return await _context.Files
-            .Where(x => x.Id == fileId)
+        return await _context.Resources
+            .Where(x => x.Id == resourceId)
             .ExecuteUpdateAsync(setters => setters.SetProperty(f => f.DownloadsCount, f => f.DownloadsCount + 1));
     }
 }

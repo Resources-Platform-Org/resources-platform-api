@@ -27,7 +27,7 @@ public class CourseRepository : GenericRepository<Course>, ICourseRepository
             .Include(c => c.CourseMajors)
                 .ThenInclude(cm => cm.Major)
             .Include(c => c.Professors)
-            .Include(c => c.Files)
+            .Include(c => c.Resources)
             .FirstOrDefaultAsync(c => c.Id == courseId);
         return course;
     }
