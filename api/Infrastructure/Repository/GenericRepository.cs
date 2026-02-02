@@ -9,9 +9,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         _context = context;
     }
-    public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate, params string[]? includes)
+    public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>>? predicate, bool trackChanges = false, params string[]? includes)
     {
         IQueryable<T> query = _context.Set<T>();
+
+        // Configure tracking behavior
+        if (!trackChanges)
+            query = query.AsNoTracking();
 
         // Apply eager loading for specified navigation properties
         if (includes != null)
@@ -26,13 +30,17 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         // Apply additional predicate if provided
         if (predicate != null)
             query = query.Where(predicate);
-        
+
         return await query.ToListAsync();
     }
 
-    public Task<T?> GetAsync(Expression<Func<T, bool>> predicate, params string[]? includes)
+    public Task<T?> GetAsync(Expression<Func<T, bool>> predicate, bool trackChanges = false, params string[]? includes)
     {
         IQueryable<T> query = _context.Set<T>();
+
+        // Configure tracking behavior
+        if (!trackChanges)
+            query = query.AsNoTracking();
 
         // Apply eager loading for specified navigation properties
         if (includes != null)
@@ -52,46 +60,41 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         var entity = await _context.Set<T>().FindAsync(id);
         return entity;
     }
-    public async Task<T> AddAsync(T entity)
+    public async Task AddAsync(T entity)
     {
         if (entity != null)
         {
             await _context.Set<T>().AddAsync(entity);
-            return entity;
         }
 
         throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
     }
 
-    public async Task<IEnumerable<T>> AddRangeAsync(IEnumerable<T> entities)
+    public async Task AddRangeAsync(IEnumerable<T> entities)
     {
         if (entities != null)
         {
             await _context.Set<T>().AddRangeAsync(entities);
-            return entities ;
         }
         throw new ArgumentNullException(nameof(entities), "Entities cannot be null");
     }
-    public Task<T> Update(T entity)
+    public void Update(T entity)
     {
         if (entity != null)
         {
-            var result = _context.Set<T>().Update(entity);
-            return Task.FromResult(result.Entity);
+            _context.Set<T>().Update(entity);
+            return;
         }
         throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
     }
 
     public async Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate)
     {
-        var existingEntity = await _context.Set<T>().FirstOrDefaultAsync(predicate);
+        var rowAffected = await _context.Set<T>()
+            .Where(predicate)
+            .ExecuteDeleteAsync();
 
-        if (existingEntity != null)
-        {
-            _context.Set<T>().Remove(existingEntity);
-            return true ;
-        }
-        return false ;
+        return rowAffected > 0;
     }
 
     public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
