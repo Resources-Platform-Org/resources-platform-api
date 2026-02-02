@@ -1,8 +1,7 @@
 using Api.Dtos.Universities;
+using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
-using Core.Models.Majors;
-using Core.Models.Universities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,124 +10,83 @@ namespace Api.Controllers.AdminControllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize(Roles = "Admin")]
-    public class UniversitiesController : ControllerBase
+    public class UniversitiesController : BaseApiController
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public UniversitiesController(IUnitOfWork unitOfWork)
+        public UniversitiesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var universities = await _unitOfWork.Universities.GetAllAsync(null);
-            var result = universities.Select(u => new UniversityResponseDto
-            {
-                UniversityID = u.UniversityID,
-                UniversityName = u.UniversityName
-            });
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<IEnumerable<UniversityResponseDto>>(universities),
+                "Fetched universities successfully."
+            );
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var university = await _unitOfWork.Universities.FindAsync(id);
-            if (university == null) return NotFound();
+            var university = await _unitOfWork.Universities.GetAsync(x => x.Id == id, true);
+            if (university == null) return ErrorResponse("University not found.", 404);
 
-            var result = new UniversityResponseDto
-            {
-                UniversityID = university.UniversityID,
-                UniversityName = university.UniversityName
-            };
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<UniversityResponseDto>(university),
+                "Fetched university successfully."
+            );
         }
-
-        [HttpGet("{id}/majors")]
-        public async Task<IActionResult> GetMajors(int id)
-        {
-            var university = await _unitOfWork.Universities.FindAsync(id);
-            if (university == null)
-                return NotFound("University not found.");
-
-            var majors = await _unitOfWork.Universities.GetMajorsAsync(id);
-            
-            var result = majors.Select(m => new MajorResponseDto
-            {
-                MajorID = m.MajorID,
-                MajorName = m.MajorName,
-                UniversityID = m.UniversityID,
-                UniversityName = university.UniversityName
-            });
-            return Ok(result);
-        }
-
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateUniversityDto dto)
+        public async Task<IActionResult> Create([FromBody] UniversityDto dto)
         {
-            if (await _unitOfWork.Universities.IsNameTakenAsync(dto.UniversityName))
-                return BadRequest("University name is already taken.");
-
-            var university = new University
-            {
-                UniversityName = dto.UniversityName
-            };
-
+            var university = _mapper.Map<University>(dto);
             await _unitOfWork.Universities.AddAsync(university);
             await _unitOfWork.SaveChangesAsync();
 
-            var result = new UniversityResponseDto
-            {
-                UniversityID = university.UniversityID,
-                UniversityName = university.UniversityName
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = university.UniversityID }, result);
+            return CreatedResponse
+            (
+                _mapper.Map<UniversityResponseDto>(university),
+                "University created successfully."
+            );
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateUniversityDto dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UniversityDto dto)
         {
             var university = await _unitOfWork.Universities.FindAsync(id);
-            if (university == null) return NotFound();
+            if (university == null)
+                return ErrorResponse("University not found.", 404);
 
-            if (university.UniversityName != dto.UniversityName && 
-                await _unitOfWork.Universities.IsNameTakenAsync(dto.UniversityName))
-            {
-                return BadRequest("University name is already taken.");
-            }
-
-            university.UniversityName = dto.UniversityName;
-            
-            await _unitOfWork.Universities.Update(university);
+            _mapper.Map(dto, university);
+            _unitOfWork.Universities.Update(university);
             await _unitOfWork.SaveChangesAsync();
 
-            var result = new UniversityResponseDto
-            {
-                UniversityID = university.UniversityID,
-                UniversityName = university.UniversityName
-            };
-
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<UniversityResponseDto>(university),
+                "University updated successfully."
+            );
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
             var university = await _unitOfWork.Universities.FindAsync(id);
-            if (university == null) return NotFound();
+            if (university == null)
+                return ErrorResponse("University not found.", 404);
 
-            // Check if university has majors or other dependencies if necessary
-            var majors = await _unitOfWork.Universities.GetMajorsAsync(id);
-            if (majors.Any())
-                return BadRequest("Cannot delete unversity Because it has associated majors , please delete them first.");
-            
-            await _unitOfWork.Universities.DeleteAsync(u => u.UniversityID == id);
+            await _unitOfWork.Universities.DeleteAsync(x => x.Id == id);
             await _unitOfWork.SaveChangesAsync();
 
-            return NoContent();
+            return SuccessResponse(university, "University deleted successfully.");
         }
     }
 }
