@@ -1,5 +1,3 @@
-using Azure;
-
 namespace Api.Wrappers;
 
 public class PagedResponse<T> : ApiResponse<IEnumerable<T>>
@@ -14,6 +12,7 @@ public class PagedResponse<T> : ApiResponse<IEnumerable<T>>
     {
         this.PageNumber = pageNumber;
         this.PageSize = pageSize;
-        this.TotalRecords = (int)Math.Ceiling((double)totalRecords / pageSize);
+        this.TotalRecords = totalRecords;
+        this.TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
     }
 }
