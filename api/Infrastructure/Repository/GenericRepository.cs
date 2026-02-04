@@ -33,7 +33,38 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
 
         return await query.ToListAsync();
     }
+    public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize, Expression<Func<T, bool>>? predicate = null, bool trackChanges = false, params string[]? include)
+    {
+        IQueryable<T> query = _context.Set<T>();
 
+        // Configure tracking behavior
+        if (!trackChanges)
+            query = query.AsNoTracking();
+
+        // Apply eager loading for specified navigation properties
+        if (include != null)
+        {
+            foreach (var navigationProperty in include)
+            {
+                if (!string.IsNullOrWhiteSpace(navigationProperty))
+                    query = query.Include(navigationProperty);
+            }
+        }
+
+        // Apply additional predicate if provided
+        if (predicate != null)
+            query = query.Where(predicate);
+
+        // total count before pagination
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
     public Task<T?> GetAsync(Expression<Func<T, bool>> predicate, bool trackChanges = false, params string[]? includes)
     {
         IQueryable<T> query = _context.Set<T>();
@@ -107,7 +138,4 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             _context.Set<T>().CountAsync() :
             _context.Set<T>().CountAsync(predicate);
     }
-
-
-
 }
