@@ -1,100 +1,98 @@
+using Api.Contracts;
 using Api.Dtos.Professors;
+using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
-using Core.Models.Professors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.AdminControllers
 {
-    [Route("api/[controller]")]
+    [Route(ApiRoutes.Professors.Controller)]
     [ApiController]
     [Authorize(Roles = "Admin")]
-    public class ProfessorsController : ControllerBase
+    public class ProfessorsController : BaseApiController
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public ProfessorsController(IUnitOfWork unitOfWork)
+        public ProfessorsController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        [HttpGet]
+        [HttpGet(ApiRoutes.Professors.GetAll)]
         public async Task<IActionResult> GetAll()
         {
             var professors = await _unitOfWork.Professors.GetAllAsync(null);
-            var result = professors.Select(p => new ProfessorResponseDto
-            {
-                ProfessorID = p.ProfessorID,
-                ProfessorName = p.ProfessorName
-            });
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<IEnumerable<ProfessorResponseDto>>(professors),
+
+                "Professors retrieved successfully."
+            );
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(ApiRoutes.Professors.GetById)]
         public async Task<IActionResult> GetById(int id)
         {
             var professor = await _unitOfWork.Professors.FindAsync(id);
-            if (professor == null) return NotFound();
+            if (professor == null)
+                return ErrorResponse("Professor not found.", 404);
 
-            var result = new ProfessorResponseDto
-            {
-                ProfessorID = professor.ProfessorID,
-                ProfessorName = professor.ProfessorName
-            };
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<ProfessorResponseDto>(professor),
+                "Professor retrieved successfully."
+            );
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateProfessorDto dto)
+        [HttpPost(ApiRoutes.Professors.Create)]
+        public async Task<IActionResult> Create([FromBody] ProfessorDto dto)
         {
-            var professor = new Professor
-            {
-                ProfessorName = dto.ProfessorName
-            };
-
+            var professor = _mapper.Map<Professor>(dto);
             await _unitOfWork.Professors.AddAsync(professor);
             await _unitOfWork.SaveChangesAsync();
 
-            var result = new ProfessorResponseDto
-            {
-                ProfessorID = professor.ProfessorID,
-                ProfessorName = professor.ProfessorName
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = professor.ProfessorID }, result);
+            return CreatedResponse
+            (
+                _mapper.Map<ProfessorResponseDto>(professor),
+                "Professor created successfully."
+            );
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateProfessorDto dto)
+        [HttpPut(ApiRoutes.Professors.Update)]
+        public async Task<IActionResult> Update(int id, [FromBody] ProfessorDto dto)
         {
             var professor = await _unitOfWork.Professors.FindAsync(id);
-            if (professor == null) return NotFound();
+            if (professor == null)
+                return ErrorResponse("Professor not found.", 404);
 
-            professor.ProfessorName = dto.ProfessorName;
-
-            await _unitOfWork.Professors.Update(professor);
+            _mapper.Map(dto, professor);
+            _unitOfWork.Professors.Update(professor);
             await _unitOfWork.SaveChangesAsync();
 
-            var result = new ProfessorResponseDto
-            {
-                ProfessorID = professor.ProfessorID,
-                ProfessorName = professor.ProfessorName
-            };
-
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<ProfessorResponseDto>(professor),
+                "Professor updated successfully."
+            );
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(ApiRoutes.Professors.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var professor = await _unitOfWork.Professors.FindAsync(id);
-            if (professor == null) return NotFound();
+            if (professor == null)
+                return ErrorResponse("Professor not found.", 404);
 
-            await _unitOfWork.Professors.DeleteAsync(p => p.ProfessorID == id);
-            await _unitOfWork.SaveChangesAsync();
-
-            return NoContent();
+            await _unitOfWork.Professors.DeleteAsync(x => x.Id == professor.Id);
+            return SuccessResponse<object>
+            (
+                null!,
+                "Professor deleted successfully."
+            );
         }
     }
 }
