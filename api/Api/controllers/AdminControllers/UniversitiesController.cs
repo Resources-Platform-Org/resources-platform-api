@@ -1,3 +1,4 @@
+using Api.Contracts;
 using Api.Dtos.Universities;
 using AutoMapper;
 using Core.Entities;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.AdminControllers
 {
-    [Route("api/[controller]")]
+    [Route(ApiRoutes.Universities.Controller)]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class UniversitiesController : BaseApiController
@@ -21,7 +22,7 @@ namespace Api.Controllers.AdminControllers
             _mapper = mapper;
         }
 
-        [HttpGet]
+        [HttpGet(ApiRoutes.Universities.GetAll)]
         public async Task<IActionResult> GetAll()
         {
             var universities = await _unitOfWork.Universities.GetAllAsync(null);
@@ -32,10 +33,10 @@ namespace Api.Controllers.AdminControllers
             );
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(ApiRoutes.Universities.GetById)]
         public async Task<IActionResult> GetById(int id)
         {
-            var university = await _unitOfWork.Universities.GetAsync(x => x.Id == id, true);
+            var university = await _unitOfWork.Universities.GetAsync(x => x.Id == id);
             if (university == null) return ErrorResponse("University not found.", 404);
 
             return SuccessResponse
@@ -44,7 +45,7 @@ namespace Api.Controllers.AdminControllers
                 "Fetched university successfully."
             );
         }
-        [HttpPost]
+        [HttpPost(ApiRoutes.Universities.Create)]
         public async Task<IActionResult> Create([FromBody] UniversityDto dto)
         {
             var university = _mapper.Map<University>(dto);
@@ -58,7 +59,7 @@ namespace Api.Controllers.AdminControllers
             );
         }
 
-        [HttpPut("{id}")]
+        [HttpPut(ApiRoutes.Universities.Update)]
         public async Task<IActionResult> Update(int id, [FromBody] UniversityDto dto)
         {
             var university = await _unitOfWork.Universities.FindAsync(id);
@@ -76,17 +77,20 @@ namespace Api.Controllers.AdminControllers
             );
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(ApiRoutes.Universities.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
             var university = await _unitOfWork.Universities.FindAsync(id);
             if (university == null)
                 return ErrorResponse("University not found.", 404);
 
-            await _unitOfWork.Universities.DeleteAsync(x => x.Id == id);
-            await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.Universities.DeleteAsync(x => x.Id == university.Id);
 
-            return SuccessResponse(university, "University deleted successfully.");
+            return SuccessResponse<object>
+            (
+                null!,
+                "University deleted successfully."
+            );
         }
     }
 }
