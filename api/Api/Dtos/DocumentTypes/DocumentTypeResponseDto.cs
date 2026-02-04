@@ -1,8 +1,9 @@
-namespace Core.Models.DocumentTypes
+
+namespace Api.Dtos.DocumentTypes
 {
     public class DocumentTypeResponseDto
     {
-        public int DocumentTypeID { get; set; }
+        public int Id { get; set; }
         public string TypeName { get; set; } = string.Empty;
     }
 }

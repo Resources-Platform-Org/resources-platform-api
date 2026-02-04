@@ -1,100 +1,95 @@
+using Api.Contracts;
 using Api.Dtos.DocumentTypes;
+using AutoMapper;
 using Core.Entities;
 using Core.Interfaces;
-using Core.Models.DocumentTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers.AdminControllers
 {
-    [Route("api/document-types")]
+    [Route(ApiRoutes.DocumentTypes.Controller)]
     [ApiController]
     [Authorize(Roles = "Admin")]
-    public class DocumentTypesController : ControllerBase
+    public class DocumentTypesController : BaseApiController
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
 
-        public DocumentTypesController(IUnitOfWork unitOfWork)
+        public DocumentTypesController(IUnitOfWork unitOfWork, IMapper mapper)
         {
             _unitOfWork = unitOfWork;
+            _mapper = mapper;
         }
 
-        [HttpGet]
+        [HttpGet(ApiRoutes.DocumentTypes.GetAll)]
         public async Task<IActionResult> GetAll()
         {
-            var types = await _unitOfWork.DocumentTypes.GetAllAsync(null);
-            var result = types.Select(t => new DocumentTypeResponseDto
-            {
-                DocumentTypeID = t.DocumentTypeID,
-                TypeName = t.TypeName.ToString()
-            });
-            return Ok(result);
+            var DocTypes = await _unitOfWork.DocumentsType.GetAllAsync(null);
+            return SuccessResponse(
+                _mapper.Map<IEnumerable<DocumentTypeResponseDto>>(DocTypes),
+                "Document types retrieved successfully."
+            );
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(ApiRoutes.DocumentTypes.GetById)]
         public async Task<IActionResult> GetById(int id)
         {
-            var type = await _unitOfWork.DocumentTypes.FindAsync(id);
-            if (type == null) return NotFound();
+            var DocType = await _unitOfWork.DocumentsType.FindAsync(id);
+            if (DocType == null)
+                return ErrorResponse("Document type not found.", 404);
 
-            var result = new DocumentTypeResponseDto
-            {
-                DocumentTypeID = type.DocumentTypeID,
-                TypeName = type.TypeName.ToString()
-            };
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<DocumentTypeResponseDto>(DocType),
+                "Document type retrieved successfully."
+            );
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateDocumentTypeDto dto)
+        [HttpPost(ApiRoutes.DocumentTypes.Create)]
+        public async Task<IActionResult> Create([FromBody] DocumentTypeDto dto)
         {
-            var type = new DocumentType
-            {
-                TypeName = dto.TypeName
-            };
-
-            await _unitOfWork.DocumentTypes.AddAsync(type);
+            var docType = _mapper.Map<DocumentType>(dto);
+            await _unitOfWork.DocumentsType.AddAsync(docType);
             await _unitOfWork.SaveChangesAsync();
 
-            var result = new DocumentTypeResponseDto
-            {
-                DocumentTypeID = type.DocumentTypeID,
-                TypeName = type.TypeName.ToString()
-            };
-
-            return CreatedAtAction(nameof(GetById), new { id = type.DocumentTypeID }, result);
+            return CreatedResponse
+            (
+                _mapper.Map<DocumentTypeResponseDto>(docType),
+                "Document type created successfully."
+            );
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateDocumentTypeDto dto)
+        [HttpPut(ApiRoutes.DocumentTypes.Update)]
+        public async Task<IActionResult> Update(int id, [FromBody] DocumentTypeDto dto)
         {
-            var type = await _unitOfWork.DocumentTypes.FindAsync(id);
-            if (type == null) return NotFound();
+            var docType = await _unitOfWork.DocumentsType.FindAsync(id);
+            if (docType == null)
+                return ErrorResponse("Document-Type not found", 404);
 
-            type.TypeName = dto.TypeName;
-
-            await _unitOfWork.DocumentTypes.Update(type);
+            _mapper.Map(dto, docType);
+            _unitOfWork.DocumentsType.Update(docType);
             await _unitOfWork.SaveChangesAsync();
-
-            var result = new DocumentTypeResponseDto
-            {
-                DocumentTypeID = type.DocumentTypeID,
-                TypeName = type.TypeName.ToString()
-            };
-
-            return Ok(result);
+            return SuccessResponse
+            (
+                _mapper.Map<DocumentTypeResponseDto>(docType),
+                "Document type updated successfully."
+            );
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete(ApiRoutes.DocumentTypes.Delete)]
         public async Task<IActionResult> Delete(int id)
         {
-            var type = await _unitOfWork.DocumentTypes.FindAsync(id);
-            if (type == null) return NotFound();
+            var docType = await _unitOfWork.DocumentsType.FindAsync(id);
+            if (docType == null)
+                return ErrorResponse("Document-Type not found", 404);
 
-            await _unitOfWork.DocumentTypes.DeleteAsync(t => t.DocumentTypeID == id);
-            await _unitOfWork.SaveChangesAsync();
-
-            return NoContent();
+            await _unitOfWork.DocumentsType.DeleteAsync(t => t.Id == id);
+            return SuccessResponse<object>
+            (
+                null!,
+                "Document type deleted successfully."
+            );
         }
     }
 }
