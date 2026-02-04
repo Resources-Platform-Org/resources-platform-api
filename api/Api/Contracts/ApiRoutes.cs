@@ -27,4 +27,25 @@ public static class ApiRoutes
         public const string Update = "{id}";
         public const string Delete = "{id}";
     }
+
+    // Define route for Document Types :-
+    public static class DocumentTypes
+    {
+        public const string Controller = Root + "/document-types";
+        public const string Create = "";
+        public const string GetAll = "";
+        public const string GetById = "{id}";
+        public const string Update = "{id}";
+        public const string Delete = "{id}";
+    }
+
+    public static class Professors
+    {
+        public const string Controller = Root + "/professors";
+        public const string Create = "";
+        public const string GetAll = "";
+        public const string GetById = "{id}";
+        public const string Update = "{id}";
+        public const string Delete = "{id}";
+    }
 }
