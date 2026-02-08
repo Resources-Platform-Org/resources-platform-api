@@ -1,4 +1,5 @@
 using Api.Contracts;
+using Api.Dtos;
 using Api.Dtos.Universities;
 using AutoMapper;
 using Core.Entities;
@@ -22,13 +23,28 @@ namespace Api.Controllers.AdminControllers
             _mapper = mapper;
         }
 
-        [HttpGet(ApiRoutes.Universities.GetAll)]
+        [HttpGet(ApiRoutes.Universities.GetList)]
         public async Task<IActionResult> GetAll()
         {
             var universities = await _unitOfWork.Universities.GetAllAsync(null);
             return SuccessResponse
             (
                 _mapper.Map<IEnumerable<UniversityResponseDto>>(universities),
+                "Fetched universities successfully."
+            );
+        }
+        [HttpGet(ApiRoutes.Universities.GetPaged)]
+        public async Task<IActionResult> GetPaged([FromQuery] PaginationQuery query)
+        {
+            var pagedUniversities = await _unitOfWork.Universities.GetPagedAsync(
+                query.PageNumber,
+                query.PageSize,
+                null,
+                false
+            );
+            return SuccessResponse
+            (
+                pagedUniversities,
                 "Fetched universities successfully."
             );
         }
