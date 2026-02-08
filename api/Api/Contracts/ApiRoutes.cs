@@ -52,4 +52,16 @@ public static class ApiRoutes
         public const string Update = "{id}";
         public const string Delete = "{id}";
     }
+
+    public static class Courses
+    {
+        public const string Controller = Root + "/courses";
+        public const string Create = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
+        public const string GetById = "{id}";
+        public const string GetByFilter = "filter"; // api/courses/filter?majorId=1&level=2
+        public const string Update = "{id}";
+        public const string Delete = "{id}";
+    }
 }
