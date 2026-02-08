@@ -1,4 +1,5 @@
 using Api.Contracts;
+using Api.Dtos;
 using Api.Dtos.DocumentTypes;
 using AutoMapper;
 using Core.Entities;
@@ -22,7 +23,7 @@ namespace Api.Controllers.AdminControllers
             _mapper = mapper;
         }
 
-        [HttpGet(ApiRoutes.DocumentTypes.GetAll)]
+        [HttpGet(ApiRoutes.DocumentTypes.GetList)]
         public async Task<IActionResult> GetAll()
         {
             var DocTypes = await _unitOfWork.DocumentsType.GetAllAsync(null);
@@ -31,7 +32,21 @@ namespace Api.Controllers.AdminControllers
                 "Document types retrieved successfully."
             );
         }
-
+        [HttpGet(ApiRoutes.DocumentTypes.GetPaged)]
+        public async Task<IActionResult> GetPaged([FromQuery] PaginationQuery query)
+        {
+            var pagedDocTypes = await _unitOfWork.DocumentsType.GetPagedAsync(
+                query.PageNumber,
+                query.PageSize,
+                null,
+                false
+            );
+            return SuccessResponse
+            (
+                pagedDocTypes,
+                "Document types retrieved successfully."
+            );
+        }
         [HttpGet(ApiRoutes.DocumentTypes.GetById)]
         public async Task<IActionResult> GetById(int id)
         {

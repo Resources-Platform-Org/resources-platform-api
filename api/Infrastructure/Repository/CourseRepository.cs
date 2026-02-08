@@ -21,14 +21,31 @@ public class CourseRepository : GenericRepository<Course>, ICourseRepository
         return result;
     }
 
-    public Task<Course?> GetCourseWithDetailsAsync(int courseId)
+    public async Task<Course?> GetCourseWithDetailsAsync(int courseId)
     {
-        var course = _context.Courses
+        var course = await _context.Courses
             .Include(c => c.CourseMajors)
                 .ThenInclude(cm => cm.Major)
             .Include(c => c.Professors)
             .Include(c => c.Resources)
             .FirstOrDefaultAsync(c => c.Id == courseId);
         return course;
+    }
+
+    public async Task<(IEnumerable<Course> Items, int TotalCount)> GetPagedCoursesAsync(int pageNumber, int pageSize)
+    {
+        var query = _context.Courses
+            .Include(c => c.CourseMajors)
+                .ThenInclude(cm => cm.Major)
+            .Include(c => c.Professors)
+            .AsNoTracking();
+
+        var totalCount = await query.CountAsync();
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
     }
 }

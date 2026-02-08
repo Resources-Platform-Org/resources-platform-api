@@ -1,4 +1,5 @@
 using Api.Contracts;
+using Api.Dtos;
 using Api.Dtos.Professors;
 using AutoMapper;
 using Core.Entities;
@@ -22,7 +23,7 @@ namespace Api.Controllers.AdminControllers
             _mapper = mapper;
         }
 
-        [HttpGet(ApiRoutes.Professors.GetAll)]
+        [HttpGet(ApiRoutes.Professors.GetList)]
         public async Task<IActionResult> GetAll()
         {
             var professors = await _unitOfWork.Professors.GetAllAsync(null);
@@ -30,6 +31,21 @@ namespace Api.Controllers.AdminControllers
             (
                 _mapper.Map<IEnumerable<ProfessorResponseDto>>(professors),
 
+                "Professors retrieved successfully."
+            );
+        }
+        [HttpGet(ApiRoutes.Professors.GetPaged)]
+        public async Task<IActionResult> GetPaged([FromQuery] PaginationQuery query)
+        {
+            var pagedProfessors = await _unitOfWork.Professors.GetPagedAsync(
+                query.PageNumber,
+                query.PageSize,
+                null,
+                false
+            );
+            return SuccessResponse
+            (
+                pagedProfessors,
                 "Professors retrieved successfully."
             );
         }

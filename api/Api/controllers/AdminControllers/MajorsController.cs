@@ -1,4 +1,5 @@
 using Api.Contracts;
+using Api.Dtos;
 using Api.Dtos.Majors;
 using AutoMapper;
 using Core.Entities;
@@ -25,6 +26,21 @@ namespace Api.Controllers.AdminControllers
             return SuccessResponse
             (
                 _mapper.Map<IEnumerable<MajorResponseDto>>(majors),
+                "Fetched majors successfully."
+            );
+        }
+        [HttpGet(ApiRoutes.Majors.GetPaged)]
+        public async Task<IActionResult> GetPaged([FromQuery] PaginationQuery query, int? universityId = null)
+        {
+            var pagedMajors = await _unitOfWork.Majors.GetPagedAsync(
+                query.PageNumber,
+                query.PageSize,
+                universityId.HasValue ? x => x.UniversityId == universityId.Value : null,
+                false
+            );
+            return SuccessResponse
+            (
+                pagedMajors,
                 "Fetched majors successfully."
             );
         }

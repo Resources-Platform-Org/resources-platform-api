@@ -93,30 +93,36 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     }
     public async Task AddAsync(T entity)
     {
-        if (entity != null)
+        if (entity == null)
         {
-            await _context.Set<T>().AddAsync(entity);
+            throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
         }
-
-        throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
+        await _context.Set<T>().AddAsync(entity);
     }
 
     public async Task AddRangeAsync(IEnumerable<T> entities)
     {
-        if (entities != null)
+        if (entities == null)
         {
-            await _context.Set<T>().AddRangeAsync(entities);
+            throw new ArgumentNullException(nameof(entities), "Entities cannot be null");
         }
-        throw new ArgumentNullException(nameof(entities), "Entities cannot be null");
+        await _context.Set<T>().AddRangeAsync(entities);
     }
     public void Update(T entity)
     {
-        if (entity != null)
+        if (entity == null)
         {
-            _context.Set<T>().Update(entity);
-            return;
+            throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
         }
-        throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
+        _context.Set<T>().Update(entity);
+    }
+    public void Remove(T entity)
+    {
+        if (entity == null)
+        {
+            throw new ArgumentNullException(nameof(entity), "Entity cannot be null");
+        }
+        _context.Set<T>().Remove(entity);
     }
 
     public async Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate)

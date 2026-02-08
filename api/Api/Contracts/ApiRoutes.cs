@@ -10,7 +10,8 @@ public static class ApiRoutes
         public const string Controller = Root + "/universities";
 
         public const string Create = "";
-        public const string GetAll = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
         public const string GetById = "{id}";
         public const string Update = "{id}";
         public const string Delete = "{id}";
@@ -21,7 +22,8 @@ public static class ApiRoutes
     {
         public const string Controller = Root + "/majors";
         public const string Create = "";
-        public const string GetAll = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
         public const string GetByUniversityId = "university/{universityId}";
         public const string GetById = "{id}";
         public const string Update = "{id}";
@@ -33,7 +35,8 @@ public static class ApiRoutes
     {
         public const string Controller = Root + "/document-types";
         public const string Create = "";
-        public const string GetAll = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
         public const string GetById = "{id}";
         public const string Update = "{id}";
         public const string Delete = "{id}";
@@ -43,8 +46,21 @@ public static class ApiRoutes
     {
         public const string Controller = Root + "/professors";
         public const string Create = "";
-        public const string GetAll = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
         public const string GetById = "{id}";
+        public const string Update = "{id}";
+        public const string Delete = "{id}";
+    }
+
+    public static class Courses
+    {
+        public const string Controller = Root + "/courses";
+        public const string Create = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
+        public const string GetById = "{id}";
+        public const string GetByFilter = "filter"; // api/courses/filter?majorId=1&level=2
         public const string Update = "{id}";
         public const string Delete = "{id}";
     }
