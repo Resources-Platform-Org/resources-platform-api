@@ -9,6 +9,7 @@ public interface IGenericRepository<T> where T : class
     Task AddAsync(T entity);
     Task AddRangeAsync(IEnumerable<T> entities);
     void Update(T entity);
+    void Remove(T entity);
     Task<bool> DeleteAsync(Expression<Func<T, bool>> predicate);
     Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
     Task<int> CountAsync(Expression<Func<T, bool>>? predicate = null);
