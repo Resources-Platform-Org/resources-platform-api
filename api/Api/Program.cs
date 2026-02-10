@@ -4,11 +4,11 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Api.Services.FileServices;
-using Api.Services.Storage;
+using Infrastructure.Services;
+// using Api.Services.Storage;
 using Core.Interfaces;
 using Infrastructure.Repository;
-using Api.Services.fileServices;
+using Core.Setting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,29 +19,31 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 // --------------------------------------------------
-// Load JWT settings from appsettings.json
+// Load JWT & File settings from appsettings.json
 // --------------------------------------------------
 var jwtSettings = builder.Configuration.GetSection("JWT").Get<JwtSettings>();
-builder.Services.AddSingleton(jwtSettings);
+builder.Services.AddSingleton(jwtSettings!);
+builder.Services.Configure<FileSetting>(builder.Configuration.GetSection("FileSettings"));
 
-// Register JWT service
-builder.Services.AddScoped<JwtService>();
+// --------------------------------------------------
+// Service Registration
+// --------------------------------------------------
 
-// Add application services (FileService, StorageService, etc.)
-builder.Services.AddScoped<IFileService, IFileService>();
-builder.Services.AddScoped<IStorageService, LocalStorageService>();
+// Auth & Token Services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
+
+// Application Services
+builder.Services.AddScoped<IFileService, FileServices>();
+
+// AutoMapper
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 // Add Unit of Work & Repositories
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddScoped<IUniversityRepository, UniversityRepository>();
-builder.Services.AddScoped<IFileRepository, FileRepository>();
+builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
-builder.Services.AddScoped<IProfessorRepository, ProfessorRepository>();
-builder.Services.AddScoped<IDocumentTypeRepository, DocumentTypeRepository>();
-builder.Services.AddScoped<IMajorUniversityRepository, MajorUniversityRepository>();
-builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
-builder.Services.AddScoped<IAcademicLevelRepository, AcademicLevelRepository>();
 
 
 // Add HttpContextAccessor
@@ -57,7 +59,7 @@ builder.Services.AddAuthentication("Bearer")
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
-            ValidIssuer = jwtSettings.Issuer,
+            ValidIssuer = jwtSettings!.Issuer,
 
             ValidateAudience = true,
             ValidAudience = jwtSettings.Audience,
@@ -150,18 +152,12 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = new PhysicalFileProvider(uploadsPath),
     RequestPath = "/uploads"
 });
-
-// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// IMPORTANT: Disable HTTPS redirection while testing locally
-// app.UseHttpsRedirection();
-
-// ❗CORS must come BEFORE authentication & authorization
 app.UseCors("AllowAngular");
 
 app.UseAuthentication();
