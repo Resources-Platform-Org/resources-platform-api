@@ -8,6 +8,7 @@ using Api.Services.FileServices;
 using Api.Services.Storage;
 using Core.Interfaces;
 using Infrastructure.Repository;
+using Api.Services.fileServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,7 @@ builder.Services.AddSingleton(jwtSettings);
 builder.Services.AddScoped<JwtService>();
 
 // Add application services (FileService, StorageService, etc.)
-builder.Services.AddScoped<IFileService, FileService>();
+builder.Services.AddScoped<IFileService, IFileService>();
 builder.Services.AddScoped<IStorageService, LocalStorageService>();
 
 // Add Unit of Work & Repositories

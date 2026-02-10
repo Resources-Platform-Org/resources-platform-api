@@ -15,6 +15,8 @@ public class ResourceConfiguration : IEntityTypeConfiguration<Resource>
         builder.Property(x => x.Path)
             .HasMaxLength(500)
             .IsRequired();
+        builder.Property(x => x.StoredFileName)
+            .IsRequired();
         builder.Property(x => x.DownloadsCount)
             .HasDefaultValue(0);
         builder.Property(x => x.IsApproved)
