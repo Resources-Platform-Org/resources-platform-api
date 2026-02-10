@@ -42,6 +42,7 @@ public static class ApiRoutes
         public const string Delete = "{id}";
     }
 
+    // Define route for Professors :-
     public static class Professors
     {
         public const string Controller = Root + "/professors";
@@ -52,7 +53,7 @@ public static class ApiRoutes
         public const string Update = "{id}";
         public const string Delete = "{id}";
     }
-
+    // Define route for Courses :-
     public static class Courses
     {
         public const string Controller = Root + "/courses";
@@ -63,5 +64,17 @@ public static class ApiRoutes
         public const string GetByFilter = "filter"; // api/courses/filter?majorId=1&level=2
         public const string Update = "{id}";
         public const string Delete = "{id}";
+    }
+
+    // define route for Resources :-
+    public static class Resources
+    {
+        public const string Controller = Root + "/resources";
+        public const string Create = "";
+        public const string GetPaged = "";
+        public const string GetList = "all";
+        public const string GetById = "{id}";
+        public const string Delete = "{id}";
+        public const string Download = "download/{id}";
     }
 }
