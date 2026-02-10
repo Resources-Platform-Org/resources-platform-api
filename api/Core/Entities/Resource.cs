@@ -10,6 +10,7 @@ public class Resource
     public int DownloadsCount { get; set; }
     public bool IsApproved { get; set; }
     public enExtension Extension { get; set; }
+    public string StoredFileName { get; set; } = string.Empty;
 
     // Foreign Keys
     public int DocumentTypeId { get; set; }
