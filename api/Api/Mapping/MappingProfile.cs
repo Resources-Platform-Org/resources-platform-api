@@ -5,6 +5,8 @@ using Api.Dtos.Majors;
 using Api.Dtos.DocumentTypes;
 using Api.Dtos.Professors;
 using Api.Dtos.Courses;
+using Api.Dtos.Resources;
+using Api.Dtos.Resource;
 namespace Api.Mapping;
 
 public class MappingProfile : Profile
@@ -30,5 +32,19 @@ public class MappingProfile : Profile
         // Course Mappings :-
         CreateMap<CourseResponseDto, Course>();
         CreateMap<CourseDto, Course>();
+
+        // Reverse Mappings :-
+        CreateMap<CreateResourceDto, Resource>()
+            .ForMember(dest => dest.StoredFileName, opt => opt.Ignore())
+            .ForMember(dest => dest.Extension, opt => opt.Ignore())
+            .ForMember(dest => dest.Path, opt => opt.Ignore())
+            .ForMember(dest => dest.IsApproved, opt => opt.MapFrom(x => false))
+            .ForMember(dest => dest.DownloadsCount, opt => opt.MapFrom(x => 0));
+
+        CreateMap<Resource, ResourceResponseDto>()
+            .ForMember(dest => dest.CourseName, opt => opt.MapFrom(src => src.Course!.Name))
+            .ForMember(dest => dest.DocumentTypeName, opt => opt.MapFrom(src => src.DocumentType!.Name))
+            .ForMember(dest => dest.UploadederName, opt => opt.MapFrom(src => src.Uploader!.Name))
+            .ForMember(dest => dest.Extension, opt => opt.MapFrom(src => src.Extension.ToString()));
     }
 }
