@@ -58,5 +58,13 @@ public class MappingProfile : Profile
         CreateMap<UpdateUserDto, User>()
             .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
             .ForMember(dest => dest.Role, opt => opt.Ignore());
+        CreateMap<User, UserProfileDto>()
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
+            .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore());
+        CreateMap<UpdateProfileDto, User>()
+            .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+            .ForMember(dest => dest.Role, opt => opt.Ignore())
+            .ForMember(dest => dest.Email, opt => opt.Ignore())
+            .ForMember(dest => dest.ProfilePicture, opt => opt.Ignore());
     }
 }
