@@ -7,6 +7,8 @@ using Api.Dtos.Professors;
 using Api.Dtos.Courses;
 using Api.Dtos.Resources;
 using Api.Dtos.Resource;
+using Api.Dtos.Users;
+using Api.Dtos.Auth;
 namespace Api.Mapping;
 
 public class MappingProfile : Profile
@@ -46,5 +48,23 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.DocumentTypeName, opt => opt.MapFrom(src => src.DocumentType!.Name))
             .ForMember(dest => dest.UploadederName, opt => opt.MapFrom(src => src.Uploader!.Name))
             .ForMember(dest => dest.Extension, opt => opt.MapFrom(src => src.Extension.ToString()));
+
+        // User Response Mappings :-
+        CreateMap<User, UserResponseDto>()
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
+        CreateMap<User, AuthResponseDto>()
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
+            .ForMember(dest => dest.Token, opt => opt.Ignore());
+        CreateMap<UpdateUserDto, User>()
+            .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+            .ForMember(dest => dest.Role, opt => opt.Ignore());
+        CreateMap<User, UserProfileDto>()
+            .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()))
+            .ForMember(dest => dest.ProfilePictureUrl, opt => opt.Ignore());
+        CreateMap<UpdateProfileDto, User>()
+            .ForMember(dest => dest.PasswordHash, opt => opt.Ignore())
+            .ForMember(dest => dest.Role, opt => opt.Ignore())
+            .ForMember(dest => dest.Email, opt => opt.Ignore())
+            .ForMember(dest => dest.ProfilePicture, opt => opt.Ignore());
     }
 }

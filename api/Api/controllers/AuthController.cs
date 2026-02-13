@@ -1,40 +1,51 @@
-﻿using Api.Dtos.Users;
+﻿using Api.Contracts;
+using Api.Controllers;
+using Api.Dtos.Auth;
+using Api.Dtos.Users;
+using AutoMapper;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Api.controllers
+namespace Api.Controllers
 {
     [ApiController]
-    [Route("Auth")]
-    public class AuthController : ControllerBase
+    [Route(ApiRoutes.Identity.Controller)]
+    public class AuthController : BaseApiController
     {
-        private readonly IUnitOfWork _unitOfWork;
-        private readonly JwtService _jwtService;
-
-        public AuthController(IUnitOfWork unitOfWork, JwtService jwtService)
+        private readonly IAuthService _authService;
+        private readonly IMapper _mapper;
+        public AuthController(IAuthService authService, IMapper mapper)
         {
-            _unitOfWork = unitOfWork;
-            _jwtService = jwtService;
+            _authService = authService;
+            _mapper = mapper;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Login([FromBody] Api.Dtos.Users.LoginRequest request)
+        [HttpPost(ApiRoutes.Identity.Register)]
+        public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
-            if (string.IsNullOrWhiteSpace(request.Username) || string.IsNullOrWhiteSpace(request.Password))
-                return BadRequest(new { message = "Username and password are required." });
+            var result = await _authService.RegisterAsync(dto.Name, dto.Email, dto.Password);
 
-            var user = await _unitOfWork.Users.GetAsync(u => u.Username == request.Username);
-            
-            if (user == null || user.PasswordHash != request.Password)
-                return Unauthorized(new { message = "Invalid username or password." });
-
-            var token = _jwtService.GenerateToken(user);
-            return Ok(new LoginResponse
+            if (!result.Success)
             {
-                Token = token,
-                Username = user.Username,
-                Role = user.Role.ToString()
-            });
+                return ErrorResponse(result.Message, 400);
+            }
+
+            var response = _mapper.Map<UserResponseDto>(result.user);
+            return SuccessResponse(response, result.Message);
+        }
+
+        [HttpPost(ApiRoutes.Identity.Login)]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            var result = await _authService.LoginAsync(dto.Email, dto.Password);
+            if (!result.Success)
+            {
+                return ErrorResponse(result.Message, 401);
+            }
+            var response = _mapper.Map<AuthResponseDto>(result.user);
+            response.Token = result.Token!;
+
+            return SuccessResponse(response, "Login successful");
         }
     }
 }

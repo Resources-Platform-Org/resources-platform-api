@@ -1,6 +1,11 @@
-using Api.Services.fileServices;
+using Core.Interfaces;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
-namespace Api.Services.FileServices;
+namespace Infrastructure.Services;
 
 public class FileServices : IFileService
 {

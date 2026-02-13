@@ -1,3 +1,5 @@
+namespace Core.Setting;
+
 public class JwtSettings
 {
     public required string Key { get; set; }

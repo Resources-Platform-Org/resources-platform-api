@@ -2,6 +2,8 @@ using Core.Entities;
 using Core.Interfaces;
 using Infrastructure.Data;
 
+namespace Infrastructure.Repository;
+
 public class UnitOfWork : IUnitOfWork
 {
     private readonly ApplicationDbContext _context;

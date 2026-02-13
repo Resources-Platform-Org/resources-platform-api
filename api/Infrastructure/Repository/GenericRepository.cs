@@ -1,6 +1,9 @@
 using System.Linq.Expressions;
 using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Core.Interfaces;
+
+namespace Infrastructure.Repository;
 
 public class GenericRepository<T> : IGenericRepository<T> where T : class
 {

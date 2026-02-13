@@ -4,7 +4,6 @@ using Api.Contracts;
 using Api.Dtos;
 using Api.Dtos.Resource;
 using Api.Dtos.Resources;
-using Api.Services.fileServices;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
@@ -50,7 +49,7 @@ public class ResourceController : BaseApiController
         }
         return PagedResponse(response, query.PageNumber, query.PageSize, result.TotalCount);
     }
-    [HttpGet(ApiRoutes.Resources.Create)]
+    [HttpPost(ApiRoutes.Resources.Create)]
     public async Task<IActionResult> Create([FromBody] CreateResourceDto dto)
     {
         long maxBytes = _fileSettings.MaxFileSizeInMB * 1024 * 1024;

@@ -77,4 +77,26 @@ public static class ApiRoutes
         public const string Delete = "{id}";
         public const string Download = "download/{id}";
     }
+
+    // define route for Authentication :-
+    public static class Identity
+    {
+        public const string Controller = Root + "/auth";
+        public const string Register = "register";
+        public const string Login = "login";
+        public const string Refresh = "refresh";
+    }
+
+    // define route for Users :-
+    public static class Users
+    {
+        public const string Controller = Root + "/users";
+        public const string GetList = "all";
+        public const string GetPaged = "";
+        public const string GetById = "{id}";
+        public const string GetMe = "me";
+        public const string Update = "{id}";
+        public const string Delete = "{id}";
+        public const string ChangePassword = "change-password";
+    }
 }

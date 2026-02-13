@@ -1,4 +1,7 @@
-namespace Api.Services.fileServices;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+
+namespace Core.Interfaces;
 
 public interface IFileService
 {
