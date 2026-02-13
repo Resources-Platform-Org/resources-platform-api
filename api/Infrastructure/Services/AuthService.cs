@@ -45,4 +45,20 @@ public class AuthService : IAuthService
 
         return (true, "User registered successfully", user);
     }
+
+    public async Task<(bool IsSuccess, string Message)> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    {
+        var user = await _unitOfWork.Users.GetAsync(x => x.Id == userId);
+        if (user == null)
+            return (false, "user not found");
+
+        bool isCurrentPasswordValid = BCrypt.Net.BCrypt.Verify(currentPassword, user.PasswordHash);
+        if (!isCurrentPasswordValid)
+            return (false, "You'r Password Invalid");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+        return (true, "Changing Password Done Succesfuly");
+    }
 }
