@@ -49,7 +49,7 @@ public class ResourceController : BaseApiController
         }
         return PagedResponse(response, query.PageNumber, query.PageSize, result.TotalCount);
     }
-    [HttpGet(ApiRoutes.Resources.Create)]
+    [HttpPost(ApiRoutes.Resources.Create)]
     public async Task<IActionResult> Create([FromBody] CreateResourceDto dto)
     {
         long maxBytes = _fileSettings.MaxFileSizeInMB * 1024 * 1024;
