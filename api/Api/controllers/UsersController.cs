@@ -1,187 +1,198 @@
-using Api.Dtos.Users;
-using Core.Entities;
-using Core.Enums;
-using Core.Interfaces;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Api.Contracts;
+using Microsoft.AspNetCore.Authorization;
+using Core.Interfaces;
+using AutoMapper;
+using Infrastructure.Services;
+using Core.Setting;
 using System.Security.Claims;
+using Api.Dtos.Users;
+using Api.Dtos;
 
-namespace Api.Controllers
+namespace Api.Controllers;
+
+[ApiController]
+[Route(ApiRoutes.Users.Controller)]
+[Authorize]
+public class UserController : BaseApiController
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UsersController : ControllerBase
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IMapper _mapper;
+    private readonly IAuthService _authService;
+    private readonly FileServices _fileService;
+    private readonly FileSetting _fileSetting;
+
+    public UserController(IUnitOfWork unitOfWork,
+            IMapper mapper,
+            IAuthService authService,
+            FileServices fileService,
+            FileSetting fileSetting)
     {
-        private readonly IUnitOfWork _unitOfWork;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
+        _authService = authService;
+        _fileService = fileService;
+        _fileSetting = fileSetting;
+    }
 
-        public UsersController(IUnitOfWork unitOfWork)
+    [HttpGet(ApiRoutes.Users.GetMe)]
+    public async Task<IActionResult> GetProfile()
+    {
+        var userId = GetCurrentUserId();
+        var user = await _unitOfWork.Users.FindAsync(userId);
+
+        if (user == null)
+            return ErrorResponse("User not found", 404);
+        var response = _mapper.Map<UserProfileDto>(user);
+
+        if (!string.IsNullOrEmpty(user.ProfilePicture))
+            response.ProfilePictureUrl = $"{Request.Scheme}://{Request.Host}/uploads/users/{user.ProfilePicture}";
+
+        return SuccessResponse(response);
+    }
+    [HttpPost(ApiRoutes.Users.ChangePassword)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+    {
+        var userId = GetCurrentUserId();
+        var result = await _authService.ChangePasswordAsync(userId, dto.CurrentPassword, dto.NewPassword);
+
+        if (!result.IsSuccess)
         {
-            _unitOfWork = unitOfWork;
+            return ErrorResponse(result.Message, 400);
         }
+        return SuccessResponse(result.Message);
+    }
+    [HttpPost("image")]
+    public async Task<IActionResult> UploadImage([FromForm] UploadeImageDto dto)
+    {
+        var allowedExt = new[] { ".jpg", ".jpeg", ".png"};
+        var ext = Path.GetExtension(dto.File.FileName).ToLower();
+        if (!allowedExt.Contains(ext))
+            return ErrorResponse("Invalid file type. Only .jpg, .jpeg, and .png are allowed.", 400);
 
-        // 1. GET /api/users/me
-        [HttpGet("me")]
-        [Authorize]
-        public async Task<IActionResult> GetMe()
+        if (dto.File.Length > 2 * 1024 * 1024)
+            return ErrorResponse("File size exceeds the limit of 2MB.", 400);
+
+        var userId = GetCurrentUserId();
+        var user = await _unitOfWork.Users.FindAsync(userId);
+
+        if (!string.IsNullOrEmpty(user!.ProfilePicture))
         {
-            // Assuming the ID is stored in the NameIdentifier claim
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            try
             {
-                return Unauthorized();
+                _fileService.DeleteFile(user.ProfilePicture, _fileSetting.UserImagesFolder);
             }
-
-            var user = await _unitOfWork.Users.FindAsync(userId);
-            if (user == null) return NotFound();
-
-            var result = new UserResponseDto
+            catch (Exception ex)
             {
-                UserID = user.UserID,
-                Username = user.Username,
-                Email = user.Email,
-                Role = user.Role.ToString()
-            };
-
-            return Ok(result);
-        }
-
-        // 2. GET /api/users/{id} - Admin only
-        [HttpGet("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetById(int id)
-        {
-            var user = await _unitOfWork.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            var result = new UserResponseDto
-            {
-                UserID = user.UserID,
-                Username = user.Username,
-                Email = user.Email,
-                Role = user.Role.ToString()
-            };
-
-            return Ok(result);
-        }
-
-        // 3. GET /api/users - Admin only (Paged)
-        [HttpGet]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
-        {
-            // Basic pagination implementation
-            // Note: IGenericRepository.GetAllAsync returns IEnumerable, so we are doing in-memory pagination here 
-            // unless we update the repository to support IQueryable or database-side pagination.
-            // For now, fetching all and taking page.
-            
-            var users = await _unitOfWork.Users.GetAllAsync(null);
-            
-            var totalRecords = users.Count();
-            var pagedUsers = users
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .Select(u => new UserResponseDto
-                {
-                    UserID = u.UserID,
-                    Username = u.Username,
-                    Email = u.Email,
-                    Role = u.Role.ToString()
-                });
-
-            return Ok(new
-            {
-                TotalRecords = totalRecords,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                Data = pagedUsers
-            });
-        }
-
-        // 4. POST /api/users - Create a new user
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
-        {
-            if (await _unitOfWork.Users.IsUsernameOrEmailTakenAsync(dto.Username, dto.Email))
-            {
-                return BadRequest("Username or Email is already taken.");
+                return ErrorResponse($"Error deleting file: {ex.Message}", 500);
             }
-
-            // For now, storing as plain text or simple placeholder as requested by context limitations.
-            // I Will Do it in Feature Implementation.
-            
-            var user = new User
-            {
-                Username = dto.Username,
-                Email = dto.Email,
-                PasswordHash = dto.Password,
-                Role = enRoles.User // Default role
-            };
-
-            await _unitOfWork.Users.AddAsync(user);
-            await _unitOfWork.SaveChangesAsync();
-
-            var result = new UserResponseDto
-            {
-                UserID = user.UserID,
-                Username = user.Username,
-                Email = user.Email,
-                Role = user.Role.ToString()
-            };
-
-            // Assuming GetById is accessible or we just return Created
-            return CreatedAtAction(nameof(GetById), new { id = user.UserID }, result);
         }
 
-        // 5. PUT /api/users/{id} - Admin only
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateUserDto dto)
+        var fileName = await _fileService.UploadFile(dto.File, _fileSetting.UserImagesFolder);
+
+        user.ProfilePicture = fileName;
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        return SuccessResponse(new { imaUrl = GetFullImageUrl(fileName)},"Image uploaded successfully.");
+    }
+    [HttpDelete("image")]
+    public async Task<IActionResult> DeleteImage()
+    {
+        var userId = GetCurrentUserId();
+        var user = await _unitOfWork.Users.FindAsync(userId);
+
+        if (string.IsNullOrEmpty(user!.ProfilePicture))
+            return ErrorResponse("No profile picture to delete.", 400);
+
+        _fileService.DeleteFile(user.ProfilePicture, _fileSetting.UserImagesFolder);
+
+        user.ProfilePicture = null;
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        return SuccessResponse<object>(null!,"Profile picture deleted successfully.");
+    }
+
+    [HttpGet(ApiRoutes.Users.GetPaged)]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
+    {
+        var result =
+            await _unitOfWork.Users.GetPagedAsync(
+                query.PageNumber , 
+                query.PageSize ,
+                null , 
+                false
+            );
+        var response = _mapper.Map<IEnumerable<UserProfileDto>>(result.Items);
+
+        // full userpicture url
+        foreach (var item in response)
         {
-            var user = await _unitOfWork.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            // Check if username changed and is taken
-            if (user.Username != dto.Username && await _unitOfWork.Users.ExistsAsync(u => u.Username == dto.Username))
-            {
-                return BadRequest("Username is already taken.");
-            }
-
-            // Check if email changed and is taken
-            if (user.Email != dto.Email && await _unitOfWork.Users.ExistsAsync(u => u.Email == dto.Email))
-            {
-                return BadRequest("Email is already taken.");
-            }
-
-            user.Username = dto.Username;
-            user.Email = dto.Email;
-            user.Role = dto.Role;
-
-            await _unitOfWork.Users.Update(user);
-            await _unitOfWork.SaveChangesAsync();
-
-            var result = new UserResponseDto
-            {
-                UserID = user.UserID,
-                Username = user.Username,
-                Email = user.Email,
-                Role = user.Role.ToString()
-            };
-
-            return Ok(result);
+            var originalEntity = result.Items.FirstOrDefault(u => u.Id == item.Id);
+            item.ProfilePictureUrl = GetFullImageUrl(originalEntity?.ProfilePicture);
         }
+        return PagedResponse(response, query.PageNumber,query.PageSize , result.TotalCount);
+    }
 
-        // 6. DELETE /api/users/{id} - Admin only
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Delete(int id)
+    [HttpPut("{id}/role")]
+    public async Task<IActionResult> ChangeRole(int id, [FromBody] ChangeRoleDto dto)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == id)
+            return ErrorResponse("You cannot change your own role.", 400);
+
+        var user = await _unitOfWork.Users.FindAsync(id);
+        if (user == null)
+            return ErrorResponse("User not found", 404);
+
+        user.Role = dto.NewRole;
+        _unitOfWork.Users.Update(user);
+        await _unitOfWork.SaveChangesAsync();
+
+        return SuccessResponse(
+            _mapper.Map<UserProfileDto>(user)
+            ,"User role updated successfully."
+        );
+    }
+
+    [HttpDelete(ApiRoutes.Users.Delete)]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        var currentUserId = GetCurrentUserId();
+        if (currentUserId == id)
+            return ErrorResponse("You cannot delete your own account.", 400);
+        
+        var user = await _unitOfWork.Users.FindAsync(id);
+        if (user == null)
+            return ErrorResponse("User not found", 404);
+
+        // delete profile picture before deleting user
+        if (!string.IsNullOrEmpty(user.ProfilePicture))
         {
-            var user = await _unitOfWork.Users.FindAsync(id);
-            if (user == null) return NotFound();
-
-            await _unitOfWork.Users.DeleteAsync(u => u.UserID == id);
-            await _unitOfWork.SaveChangesAsync();
-
-            return NoContent();
+            _fileService.DeleteFile(user.ProfilePicture, _fileSetting.UserImagesFolder);
         }
+
+        await _unitOfWork.Users.DeleteAsync(x => x.Id == id);
+        return SuccessResponse<object>(null!,"User deleted successfully.");
+    }
+
+    // Helper method to construct full image URL
+    private string? GetFullImageUrl(string? fileName)
+    {
+        if (string.IsNullOrEmpty(fileName))
+            return null;
+        return $"{Request.Scheme}://{Request.Host}/{_fileSetting.UserImagesFolder}/{fileName}";
+    }
+    // Helper method to get current user ID from claims
+    private int GetCurrentUserId()
+    {
+        var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (claim == null)
+        {
+            throw new Exception("User ID claim not found");
+        }
+        return int.Parse(claim.Value);
     }
 }
