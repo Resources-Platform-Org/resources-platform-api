@@ -2,6 +2,7 @@
 using Api.Controllers;
 using Api.Dtos.Auth;
 using Api.Dtos.Users;
+using Api.Wrappers;
 using AutoMapper;
 using Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
