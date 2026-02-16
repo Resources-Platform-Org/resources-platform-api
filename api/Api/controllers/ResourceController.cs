@@ -4,6 +4,7 @@ using Api.Contracts;
 using Api.Dtos;
 using Api.Dtos.Resource;
 using Api.Dtos.Resources;
+using Api.Wrappers;
 using AutoMapper;
 using Core.Entities;
 using Core.Enums;
@@ -15,6 +16,7 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route(ApiRoutes.Resources.Controller)]
+[Produces("application/json")]
 public class ResourceController : BaseApiController
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -28,7 +30,15 @@ public class ResourceController : BaseApiController
         _fileService = fileService;
         _fileSettings = fileSettings;
     }
+
+    /// <summary>
+    /// Gets a paginated list of resources
+    /// </summary>
+    /// <param name="query">Pagination query</param>
+    /// <param name="courseId">Optional course ID to filter by</param>
+    /// <returns>Paginated resources</returns>
     [HttpGet(ApiRoutes.Resources.GetPaged)]
+    [ProducesResponseType(typeof(PagedResponse<ResourceResponseDto>), 200)]
     public async Task<IActionResult> GetPaged([FromQuery] PaginationQuery query, [FromQuery] int? courseId)
     {
         Expression<Func<Resource, bool>>? filter = null;
@@ -49,7 +59,19 @@ public class ResourceController : BaseApiController
         }
         return PagedResponse(response, query.PageNumber, query.PageSize, result.TotalCount);
     }
+
+    /// <summary>
+    /// Uploads a new resource
+    /// </summary>
+    /// <param name="dto">Resource details and file</param>
+    /// <returns>Created resource</returns>
+    /// <response code="201">Resource created successfully</response>
+    /// <response code="400">Invalid file size or course not found</response>
     [HttpPost(ApiRoutes.Resources.Create)]
+    [Consumes("application/json")]
+    [ProducesResponseType(typeof(ApiResponse<ResourceResponseDto>), 201)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 404)]
     public async Task<IActionResult> Create([FromBody] CreateResourceDto dto)
     {
         long maxBytes = _fileSettings.MaxFileSizeInMB * 1024 * 1024;
@@ -81,7 +103,17 @@ public class ResourceController : BaseApiController
             ApiRoutes.Resources.GetById.Replace("{id}", resource.Id.ToString())
         );
     }
+
+    /// <summary>
+    /// Downloads a resource file
+    /// </summary>
+    /// <param name="id">Resource ID</param>
+    /// <returns>File stream</returns>
+    /// <response code="200">File download</response>
+    /// <response code="404">Resource or file not found</response>
     [HttpGet(ApiRoutes.Resources.Download)]
+    [ProducesResponseType(typeof(FileStreamResult), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 404)]
     public async Task<IActionResult> Download(int id)
     {
         var resource = await _unitOfWork.Resources.GetAsync(f => f.Id == id);
