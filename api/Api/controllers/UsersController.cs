@@ -8,12 +8,14 @@ using Core.Setting;
 using System.Security.Claims;
 using Api.Dtos.Users;
 using Api.Dtos;
+using Api.Wrappers;
 
 namespace Api.Controllers;
 
 [ApiController]
 [Route(ApiRoutes.Users.Controller)]
 [Authorize]
+[Produces("application/json")]
 public class UserController : BaseApiController
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -35,7 +37,15 @@ public class UserController : BaseApiController
         _fileSetting = fileSetting;
     }
 
+    /// <summary>
+    /// Gets the current user's profile
+    /// </summary>
+    /// <returns>User profile information</returns>
+    /// <response code="200">Returns the user profile</response>
+    /// <response code="404">If user is not found</response>
     [HttpGet(ApiRoutes.Users.GetMe)]
+    [ProducesResponseType(typeof(ApiResponse<UserProfileDto>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 404)]
     public async Task<IActionResult> GetProfile()
     {
         var userId = GetCurrentUserId();
@@ -50,7 +60,16 @@ public class UserController : BaseApiController
 
         return SuccessResponse(response);
     }
+
+    /// <summary>
+    /// Change the current user's password
+    /// </summary>
+    /// <param name="dto">Old and new passwords</param>
+    /// <response code="200">If password changed successfully</response>
+    /// <response code="400">If old password is incorrect or validation fails</response>
     [HttpPost(ApiRoutes.Users.ChangePassword)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
     {
         var userId = GetCurrentUserId();
@@ -62,10 +81,21 @@ public class UserController : BaseApiController
         }
         return SuccessResponse(result.Message);
     }
+
+    /// <summary>
+    /// Uploads a profile picture for the current user
+    /// </summary>
+    /// <param name="dto">Image file (jpg, jpeg, png)</param>
+    /// <returns>New image URL</returns>
+    /// <response code="200">Image uploaded successfully</response>
+    /// <response code="400">Invalid file type or size</response>
     [HttpPost("image")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     public async Task<IActionResult> UploadImage([FromForm] UploadeImageDto dto)
     {
-        var allowedExt = new[] { ".jpg", ".jpeg", ".png"};
+        var allowedExt = new[] { ".jpg", ".jpeg", ".png" };
         var ext = Path.GetExtension(dto.File.FileName).ToLower();
         if (!allowedExt.Contains(ext))
             return ErrorResponse("Invalid file type. Only .jpg, .jpeg, and .png are allowed.", 400);
@@ -94,9 +124,17 @@ public class UserController : BaseApiController
         _unitOfWork.Users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
-        return SuccessResponse(new { imaUrl = GetFullImageUrl(fileName)},"Image uploaded successfully.");
+        return SuccessResponse(new { imaUrl = GetFullImageUrl(fileName) }, "Image uploaded successfully.");
     }
+
+    /// <summary>
+    /// Deletes the current user's profile picture
+    /// </summary>
+    /// <response code="200">Image deleted successfully</response>
+    /// <response code="400">If no image exists</response>
     [HttpDelete("image")]
+    [ProducesResponseType(typeof(ApiResponse<object>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     public async Task<IActionResult> DeleteImage()
     {
         var userId = GetCurrentUserId();
@@ -111,18 +149,24 @@ public class UserController : BaseApiController
         _unitOfWork.Users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
-        return SuccessResponse<object>(null!,"Profile picture deleted successfully.");
+        return SuccessResponse<object>(null!, "Profile picture deleted successfully.");
     }
 
+    /// <summary>
+    /// Get paginated list of users (Admin only)
+    /// </summary>
+    /// <param name="query">Pagination parameters</param>
+    /// <returns>Paged list of users</returns>
     [HttpGet(ApiRoutes.Users.GetPaged)]
     [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(PagedResponse<UserProfileDto>), 200)]
     public async Task<IActionResult> GetAll([FromQuery] PaginationQuery query)
     {
         var result =
             await _unitOfWork.Users.GetPagedAsync(
-                query.PageNumber , 
-                query.PageSize ,
-                null , 
+                query.PageNumber,
+                query.PageSize,
+                null,
                 false
             );
         var response = _mapper.Map<IEnumerable<UserProfileDto>>(result.Items);
@@ -133,10 +177,19 @@ public class UserController : BaseApiController
             var originalEntity = result.Items.FirstOrDefault(u => u.Id == item.Id);
             item.ProfilePictureUrl = GetFullImageUrl(originalEntity?.ProfilePicture);
         }
-        return PagedResponse(response, query.PageNumber,query.PageSize , result.TotalCount);
+        return PagedResponse(response, query.PageNumber, query.PageSize, result.TotalCount);
     }
 
+    /// <summary>
+    /// Changes a user's role (Admin only)
+    /// </summary>
+    /// <param name="id">User ID</param>
+    /// <param name="dto">New role</param>
     [HttpPut("{id}/role")]
+    [Authorize(Roles = "Admin")]
+    [ProducesResponseType(typeof(ApiResponse<string>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<string>), 404)]
     public async Task<IActionResult> ChangeRole(int id, [FromBody] ChangeRoleDto dto)
     {
         var currentUserId = GetCurrentUserId();
@@ -153,7 +206,7 @@ public class UserController : BaseApiController
 
         return SuccessResponse(
             _mapper.Map<UserProfileDto>(user)
-            ,"User role updated successfully."
+            , "User role updated successfully."
         );
     }
 
@@ -163,7 +216,7 @@ public class UserController : BaseApiController
         var currentUserId = GetCurrentUserId();
         if (currentUserId == id)
             return ErrorResponse("You cannot delete your own account.", 400);
-        
+
         var user = await _unitOfWork.Users.FindAsync(id);
         if (user == null)
             return ErrorResponse("User not found", 404);
@@ -175,7 +228,7 @@ public class UserController : BaseApiController
         }
 
         await _unitOfWork.Users.DeleteAsync(x => x.Id == id);
-        return SuccessResponse<object>(null!,"User deleted successfully.");
+        return SuccessResponse<object>(null!, "User deleted successfully.");
     }
 
     // Helper method to construct full image URL

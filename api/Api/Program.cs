@@ -83,7 +83,13 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Resources Platform API",
-        Version = "v1"
+        Version = "v1",
+        Description = "API for Resources Management System",
+        Contact = new OpenApiContact
+        {
+            Name = "API Support",
+            Email = "support@example.com"
+        }
     });
 
     // JWT Authorization in Swagger UI
@@ -98,6 +104,25 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+
+    // XML Documentation
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
     {
         {
             new OpenApiSecurityScheme
