@@ -8,6 +8,7 @@ using Core.Setting;
 using System.Security.Claims;
 using Api.Dtos.Users;
 using Api.Dtos;
+using Api.Wrappers;
 
 namespace Api.Controllers;
 
@@ -59,7 +60,7 @@ public class UserController : BaseApiController
 
         return SuccessResponse(response);
     }
-    
+
     /// <summary>
     /// Change the current user's password
     /// </summary>
@@ -94,7 +95,7 @@ public class UserController : BaseApiController
     [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     public async Task<IActionResult> UploadImage([FromForm] UploadeImageDto dto)
     {
-        var allowedExt = new[] { ".jpg", ".jpeg", ".png"};
+        var allowedExt = new[] { ".jpg", ".jpeg", ".png" };
         var ext = Path.GetExtension(dto.File.FileName).ToLower();
         if (!allowedExt.Contains(ext))
             return ErrorResponse("Invalid file type. Only .jpg, .jpeg, and .png are allowed.", 400);
@@ -123,7 +124,7 @@ public class UserController : BaseApiController
         _unitOfWork.Users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
-        return SuccessResponse(new { imaUrl = GetFullImageUrl(fileName)},"Image uploaded successfully.");
+        return SuccessResponse(new { imaUrl = GetFullImageUrl(fileName) }, "Image uploaded successfully.");
     }
 
     /// <summary>
@@ -148,7 +149,7 @@ public class UserController : BaseApiController
         _unitOfWork.Users.Update(user);
         await _unitOfWork.SaveChangesAsync();
 
-        return SuccessResponse<object>(null!,"Profile picture deleted successfully.");
+        return SuccessResponse<object>(null!, "Profile picture deleted successfully.");
     }
 
     /// <summary>
@@ -163,9 +164,9 @@ public class UserController : BaseApiController
     {
         var result =
             await _unitOfWork.Users.GetPagedAsync(
-                query.PageNumber , 
-                query.PageSize ,
-                null , 
+                query.PageNumber,
+                query.PageSize,
+                null,
                 false
             );
         var response = _mapper.Map<IEnumerable<UserProfileDto>>(result.Items);
@@ -176,7 +177,7 @@ public class UserController : BaseApiController
             var originalEntity = result.Items.FirstOrDefault(u => u.Id == item.Id);
             item.ProfilePictureUrl = GetFullImageUrl(originalEntity?.ProfilePicture);
         }
-        return PagedResponse(response, query.PageNumber,query.PageSize , result.TotalCount);
+        return PagedResponse(response, query.PageNumber, query.PageSize, result.TotalCount);
     }
 
     /// <summary>
@@ -205,7 +206,7 @@ public class UserController : BaseApiController
 
         return SuccessResponse(
             _mapper.Map<UserProfileDto>(user)
-            ,"User role updated successfully."
+            , "User role updated successfully."
         );
     }
 
@@ -215,7 +216,7 @@ public class UserController : BaseApiController
         var currentUserId = GetCurrentUserId();
         if (currentUserId == id)
             return ErrorResponse("You cannot delete your own account.", 400);
-        
+
         var user = await _unitOfWork.Users.FindAsync(id);
         if (user == null)
             return ErrorResponse("User not found", 404);
@@ -227,7 +228,7 @@ public class UserController : BaseApiController
         }
 
         await _unitOfWork.Users.DeleteAsync(x => x.Id == id);
-        return SuccessResponse<object>(null!,"User deleted successfully.");
+        return SuccessResponse<object>(null!, "User deleted successfully.");
     }
 
     // Helper method to construct full image URL
