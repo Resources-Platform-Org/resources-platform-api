@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Security.Claims;
 using Api.Contracts;
 using Api.Dtos;
-using Api.Dtos.Resource;
 using Api.Dtos.Resources;
 using Api.Wrappers;
 using AutoMapper;
@@ -10,6 +10,7 @@ using Core.Entities;
 using Core.Enums;
 using Core.Interfaces;
 using Core.Setting;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
@@ -68,11 +69,12 @@ public class ResourceController : BaseApiController
     /// <response code="201">Resource created successfully</response>
     /// <response code="400">Invalid file size or course not found</response>
     [HttpPost(ApiRoutes.Resources.Create)]
-    [Consumes("application/json")]
+    [Authorize]
+    [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ApiResponse<ResourceResponseDto>), 201)]
     [ProducesResponseType(typeof(ApiResponse<string>), 400)]
     [ProducesResponseType(typeof(ApiResponse<string>), 404)]
-    public async Task<IActionResult> Create([FromBody] CreateResourceDto dto)
+    public async Task<IActionResult> Create([FromForm] CreateResourceDto dto)
     {
         long maxBytes = _fileSettings.MaxFileSizeInMB * 1024 * 1024;
         if (dto.File.Length > maxBytes)
@@ -95,6 +97,7 @@ public class ResourceController : BaseApiController
         resource.Extension = extensionEnum;
         resource.DownloadsCount = 0;
         resource.IsApproved = true;
+        resource.UploaderId = GetCurrentUserId();
 
         await _unitOfWork.Resources.AddAsync(resource);
         await _unitOfWork.SaveChangesAsync();
@@ -187,5 +190,15 @@ public class ResourceController : BaseApiController
             ".gif" => enExtension.GIF,
             _ => throw new Exception("Unsupported file type")
         };
+    }
+
+    private int GetCurrentUserId()
+    {
+        var claim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
+        if (claim == null)
+        {
+            throw new Exception("User ID claim not found");
+        }
+        return int.Parse(claim.Value);
     }
 }
