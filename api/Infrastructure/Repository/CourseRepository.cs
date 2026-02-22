@@ -24,24 +24,26 @@ public class CourseRepository : GenericRepository<Course>, ICourseRepository
     public async Task<Course?> GetCourseWithDetailsAsync(int courseId)
     {
         var course = await _context.Courses
+            .AsNoTracking()
             .Include(c => c.CourseMajors)
                 .ThenInclude(cm => cm.Major)
             .Include(c => c.Professors)
             .Include(c => c.Resources)
+            .AsSplitQuery()
             .FirstOrDefaultAsync(c => c.Id == courseId);
         return course;
     }
 
     public async Task<(IEnumerable<Course> Items, int TotalCount)> GetPagedCoursesAsync(int pageNumber, int pageSize)
     {
-        var query = _context.Courses
+        var baseQuery = _context.Courses.AsNoTracking();
+
+        var totalCount = await baseQuery.CountAsync();
+        var items = await baseQuery
             .Include(c => c.CourseMajors)
                 .ThenInclude(cm => cm.Major)
             .Include(c => c.Professors)
-            .AsNoTracking();
-
-        var totalCount = await query.CountAsync();
-        var items = await query
+            .AsSplitQuery()
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
