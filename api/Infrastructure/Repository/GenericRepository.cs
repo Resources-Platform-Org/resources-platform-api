@@ -40,6 +40,11 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
     {
         IQueryable<T> query = _context.Set<T>();
 
+        if (predicate != null)
+            query = query.Where(predicate);
+
+        var totalCount = await query.CountAsync();
+
         // Configure tracking behavior
         if (!trackChanges)
             query = query.AsNoTracking();
@@ -53,13 +58,6 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
                     query = query.Include(navigationProperty);
             }
         }
-
-        // Apply additional predicate if provided
-        if (predicate != null)
-            query = query.Where(predicate);
-
-        // total count before pagination
-        var totalCount = await query.CountAsync();
 
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
