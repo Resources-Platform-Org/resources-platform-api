@@ -6,7 +6,6 @@ using Api.Dtos.DocumentTypes;
 using Api.Dtos.Professors;
 using Api.Dtos.Courses;
 using Api.Dtos.Resources;
-using Api.Dtos.Resource;
 using Api.Dtos.Users;
 using Api.Dtos.Auth;
 namespace Api.Mapping;
