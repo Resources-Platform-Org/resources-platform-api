@@ -9,6 +9,7 @@ using Infrastructure.Services;
 using Core.Interfaces;
 using Infrastructure.Repository;
 using Core.Setting;
+using Infrastructure.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +46,8 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-
+builder.Services.AddSingleton<AuditingInterceptor>();
+builder.Services.AddSingleton<SoftDeleteInterceptor>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
@@ -130,8 +132,13 @@ builder.Services.AddSwaggerGen(c =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new Exception("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContextPool<ApplicationDbContext>((sp, options) =>
+{
+    var auditInterceptor = sp.GetRequiredService<AuditingInterceptor>();
+    var softDeleteInterceptor = sp.GetRequiredService<SoftDeleteInterceptor>();
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(softDeleteInterceptor, auditInterceptor);
+});
 
 
 // --------------------------------------------------
