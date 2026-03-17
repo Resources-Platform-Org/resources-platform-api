@@ -1,6 +1,8 @@
-﻿namespace Core.Entities;
+﻿using Core.Interfaces;
 
-public class User
+namespace Core.Entities;
+
+public class User : IAuditableEntity, ISoftDeletable
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
@@ -8,6 +10,14 @@ public class User
     public string PasswordHash { get; set; } = string.Empty;
     public string? ProfilePicture { get; set; } = null;
     public enRoles Role { get; set; } = enRoles.User;
+
+    // Auditing Properties
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+
+    // Soft Deletion Properties
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
     // Navigation Properties
     public ICollection<Resource> UploadedResources { get; set; } = new List<Resource>();
 }
