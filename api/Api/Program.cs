@@ -9,6 +9,8 @@ using Infrastructure.Services;
 using Core.Interfaces;
 using Infrastructure.Repository;
 using Core.Setting;
+using Infrastructure.Interceptors;
+using Api.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,9 +48,17 @@ builder.Services.AddScoped<IResourceRepository, ResourceRepository>();
 builder.Services.AddScoped<ICourseRepository, CourseRepository>();
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 
+// Add Interceptors
+builder.Services.AddSingleton<AuditingInterceptor>();
+builder.Services.AddSingleton<SlowQueryInterceptor>();
+builder.Services.AddSingleton<SoftDeleteInterceptor>();
 
 // Add HttpContextAccessor
 builder.Services.AddHttpContextAccessor();
+
+// Add Global Exception Handling Middleware
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 
 // --------------------------------------------------
@@ -130,8 +140,16 @@ builder.Services.AddSwaggerGen(c =>
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new Exception("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+builder.Services.AddDbContextPool<ApplicationDbContext>((sp, options) =>
+{
+    var auditInterceptor = sp.GetRequiredService<AuditingInterceptor>();
+    var softDeleteInterceptor = sp.GetRequiredService<SoftDeleteInterceptor>();
+    var slowQueryInterceptor = sp.GetRequiredService<SlowQueryInterceptor>();
+
+
+    options.UseSqlServer(connectionString)
+        .AddInterceptors(softDeleteInterceptor, auditInterceptor, slowQueryInterceptor);
+});
 
 
 // --------------------------------------------------
@@ -153,6 +171,9 @@ builder.Services.AddCors(options =>
 // Build App
 // --------------------------------------------------
 var app = builder.Build();
+
+// we added before to make sure it is registered in the DI container, but we also need to add it to the middleware pipeline
+app.UseExceptionHandler();
 
 // Static Files
 var uploadsPath = Path.Combine(builder.Environment.ContentRootPath, "Resources", "Uploads");

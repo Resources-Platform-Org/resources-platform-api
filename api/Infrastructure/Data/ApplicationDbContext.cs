@@ -14,6 +14,9 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        // Uses our custom extension method for a cleaner apply
+        modelBuilder.AddGlobalFilter<Core.Interfaces.ISoftDeletable>(e => !e.IsDeleted);
     }
 
     // Add DbSet properties for entities :-

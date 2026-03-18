@@ -1,6 +1,8 @@
-﻿namespace Core.Entities;
+﻿using Core.Interfaces;
 
-public class Course
+namespace Core.Entities;
+
+public class Course : IAuditableEntity
 {
   public int Id { get; set; }
   public string Name { get; set; } = string.Empty;
@@ -10,4 +12,8 @@ public class Course
   public ICollection<CourseMajor> CourseMajors { get; set; } = new List<CourseMajor>();
   public ICollection<Professor> Professors { get; set; } = new List<Professor>();
   public ICollection<Resource> Resources { get; set; } = new List<Resource>();
+
+  // Auditing Properties
+  public DateTime CreatedAt { get; set; }
+  public DateTime? UpdatedAt { get; set; }
 }
