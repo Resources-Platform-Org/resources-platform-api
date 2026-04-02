@@ -11,5 +11,7 @@ namespace Api.Dtos.Courses
         public List<string>? Professors { get; set; } = new List<string>();
         public List<string>? CourseMajors { get; set; } = new List<string>();
         public int? FileCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }
