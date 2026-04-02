@@ -59,6 +59,12 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
             }
         }
 
+        var keyProperty = _context.Model.FindEntityType(typeof(T))?.FindPrimaryKey()?.Properties.FirstOrDefault();
+        if (keyProperty != null)
+        {
+            query = query.OrderBy(e => EF.Property<object>(e, keyProperty.Name));
+        }
+
         var items = await query
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)

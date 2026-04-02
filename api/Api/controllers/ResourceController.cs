@@ -53,7 +53,7 @@ public class ResourceController : BaseApiController
             false,
             "Course", "DocumentType", "Uploader"
         );
-        var response = _mapper.Map<IEnumerable<ResourceResponseDto>>(result);
+        var response = _mapper.Map<IEnumerable<ResourceResponseDto>>(result.Items);
         foreach (var item in response)
         {
             item.DownloadUrl = $"{Request.Scheme}://{Request.Host}/{ApiRoutes.Resources.Controller}/download/{item.Id}";

@@ -56,10 +56,14 @@ namespace Api.Controllers.AdminControllers
                 null,
                 false
             );
-            return SuccessResponse
+
+            var response = _mapper.Map<IEnumerable<UniversityResponseDto>>(pagedUniversities.Items);
+            return PagedResponse
             (
-                pagedUniversities,
-                "Fetched universities successfully."
+                response,
+                query.PageNumber,
+                query.PageSize,
+                pagedUniversities.TotalCount
             );
         }
 

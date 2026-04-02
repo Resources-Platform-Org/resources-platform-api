@@ -9,7 +9,7 @@ public class User : IAuditableEntity, ISoftDeletable
     public string Email { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
     public string? ProfilePicture { get; set; } = null;
-    public enRoles Role { get; set; } = enRoles.User;
+    public enRoles Role { get; set; } = enRoles.Admin;
 
     // Auditing Properties
     public DateTime CreatedAt { get; set; }

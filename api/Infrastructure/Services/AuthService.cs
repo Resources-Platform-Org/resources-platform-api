@@ -37,7 +37,7 @@ public class AuthService : IAuthService
             Name = name,
             Email = email,
             PasswordHash = PasswordHash,
-            Role = enRoles.User
+            Role = enRoles.Admin // Temporarily Admin for testing
         };
 
         await _unitOfWork.Users.AddAsync(user);

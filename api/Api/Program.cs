@@ -25,7 +25,8 @@ builder.Services.AddEndpointsApiExplorer();
 // --------------------------------------------------
 var jwtSettings = builder.Configuration.GetSection("JWT").Get<JwtSettings>();
 builder.Services.AddSingleton(jwtSettings!);
-builder.Services.Configure<FileSetting>(builder.Configuration.GetSection("FileSettings"));
+var fileSettings = builder.Configuration.GetSection("FileSetting").Get<FileSetting>();
+builder.Services.AddSingleton(fileSettings!);
 
 // --------------------------------------------------
 // Service Registration

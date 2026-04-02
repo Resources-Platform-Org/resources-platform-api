@@ -55,10 +55,14 @@ namespace Api.Controllers.AdminControllers
                 universityId.HasValue ? x => x.UniversityId == universityId.Value : null,
                 false
             );
-            return SuccessResponse
+
+            var response = _mapper.Map<IEnumerable<MajorResponseDto>>(pagedMajors.Items);
+            return PagedResponse
             (
-                pagedMajors,
-                "Fetched majors successfully."
+                response,
+                query.PageNumber,
+                query.PageSize,
+                pagedMajors.TotalCount
             );
         }
 
