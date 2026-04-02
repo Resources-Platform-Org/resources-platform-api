@@ -57,10 +57,14 @@ namespace Api.Controllers.AdminControllers
                 null,
                 false
             );
-            return SuccessResponse
+
+            var response = _mapper.Map<IEnumerable<ProfessorResponseDto>>(pagedProfessors.Items);
+            return PagedResponse
             (
-                pagedProfessors,
-                "Professors retrieved successfully."
+                response,
+                query.PageNumber,
+                query.PageSize,
+                pagedProfessors.TotalCount
             );
         }
 

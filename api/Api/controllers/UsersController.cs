@@ -21,13 +21,13 @@ public class UserController : BaseApiController
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IAuthService _authService;
-    private readonly FileServices _fileService;
+    private readonly IFileService _fileService;
     private readonly FileSetting _fileSetting;
 
     public UserController(IUnitOfWork unitOfWork,
             IMapper mapper,
             IAuthService authService,
-            FileServices fileService,
+            IFileService fileService,
             FileSetting fileSetting)
     {
         _unitOfWork = unitOfWork;

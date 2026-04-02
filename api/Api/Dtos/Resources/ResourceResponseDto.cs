@@ -8,7 +8,9 @@ public class ResourceResponseDto
     public bool IsApproved { get; set; }
     public string CourseName { get; set; } = string.Empty;
     public string DocumentTypeName { get; set; } = string.Empty;
-    public string UploadederName { get; set; } = string.Empty;
+    public string UploaderName { get; set; } = string.Empty;
     public string Extension { get; set; } = string.Empty;
     public string DownloadUrl { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }

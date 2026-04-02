@@ -6,6 +6,6 @@ namespace Api.Dtos.Universities
     {
         [Required]
         [StringLength(100, MinimumLength = 2)]
-        public string UniversityName { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 }

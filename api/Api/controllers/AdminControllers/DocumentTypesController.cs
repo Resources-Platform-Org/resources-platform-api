@@ -55,10 +55,14 @@ namespace Api.Controllers.AdminControllers
                 null,
                 false
             );
-            return SuccessResponse
+
+            var response = _mapper.Map<IEnumerable<DocumentTypeResponseDto>>(pagedDocTypes.Items);
+            return PagedResponse
             (
-                pagedDocTypes,
-                "Document types retrieved successfully."
+                response,
+                query.PageNumber,
+                query.PageSize,
+                pagedDocTypes.TotalCount
             );
         }
 

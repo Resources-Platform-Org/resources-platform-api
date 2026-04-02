@@ -4,6 +4,8 @@ namespace Api.Dtos.DocumentTypes
     public class DocumentTypeResponseDto
     {
         public int Id { get; set; }
-        public string TypeName { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }
